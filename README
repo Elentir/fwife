@@ -1,0 +1,15 @@
+						Fwife : Frugalware Installer Frontend Readme
+
+Fwife 0.1 alpha
+
+Warning : Alpha version - Core works but plugins aren't finished. Many bugs and memory leaks are maybe possible.
+
+This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. Any suggestion and patchs are welcome.
+
+Knows Bugs :
+
+TODO : Have a multilingual installer that work good ;)
+       Finish plugins
+
+More detailled readme come soon!
+ 

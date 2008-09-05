@@ -424,45 +424,18 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 			{
 				if(!strcmp(old_text, "/"))
 				{
-					GtkWidget *pAbout;
-					gchar *sSite = "If you want to change your root partition, select another root partition and use appropriate button!";
-
-					pAbout = gtk_message_dialog_new (NULL,
-						GTK_DIALOG_MODAL,
-      						GTK_MESSAGE_ERROR,
-      						GTK_BUTTONS_OK,
-      						"Can't change mount point :\n%s",
-     						 sSite);
-
-					gtk_dialog_run(GTK_DIALOG(pAbout));
-
-					gtk_widget_destroy(pAbout);
+					fwife_error("If you want to change your root partition, select another root partition and use appropriate button!");
 					return;
 				}
 				else if(!strcmp(old_text, "swap"))
 				{
-					GtkWidget *pQuestion;
-
-					/* Creation de la boite de message */
-					/* Type : Question -> GTK_MESSAGE_QUESTION */
-					/* Boutons : 1 OUI, 1 NON -> GTK_BUTTONS_YES_NO */
-					pQuestion = gtk_message_dialog_new (NULL,
-							GTK_DIALOG_MODAL,
-       							GTK_MESSAGE_QUESTION,
-       							GTK_BUTTONS_YES_NO,
-       							"Don't use this partition as a swap?");
-
-					/* Affichage et attente d'une reponse */
-					switch(gtk_dialog_run(GTK_DIALOG(pQuestion)))
+					switch(fwife_question("Don't use this partition as a swap"))
 					{
 						case GTK_RESPONSE_YES:
 							gtk_list_store_set (GTK_LIST_STORE (model), &iter, TYPE_COLUMN, NULL, -1);
 							nbswap--;
-							gtk_widget_destroy(pQuestion);
 							break;
 						case GTK_RESPONSE_NO:
-							/* NON -> on detruit la boite de message */
-							gtk_widget_destroy(pQuestion);
 							return;
 					}
 				}
@@ -470,23 +443,13 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 			}
 			if(new_text && (!strcmp(new_text, "/") || !strcmp(new_text, "swap")))
 			{
-				GtkWidget *pAbout;
-				
-				pAbout = gtk_message_dialog_new (NULL,
-						GTK_DIALOG_MODAL,
-      						GTK_MESSAGE_ERROR,
-      						GTK_BUTTONS_OK,
-      				"Use appropriate buttons do do that!");
-
-				gtk_dialog_run(GTK_DIALOG(pAbout));
-
-				gtk_widget_destroy(pAbout);
-				return;
+				fwife_error("Use appropriate button to do that");
 			}
 			else if(new_text)
 			{
 				if(old_text)
 					g_free (old_text);
+				
 				GList *point = g_list_nth(parts, 4*i+3);
 				gchar *text = g_strdup(new_text);
 				point->data = text;
@@ -592,13 +555,13 @@ int requestformat(char *namedev)
 	GtkWidget *check = gtk_check_button_new_with_label("formatting check - slowly");
 	gtk_box_pack_start(GTK_BOX (pVBox), check, FALSE, FALSE, 0);
 	
-	/* Affichage des elements de la boite de dialogue */
+	/* Show vbox  */
 	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
 
-	/* On lance la boite de dialogue et on recupere la reponse */
+	/* Running dialog box and get back response */
 	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
 	{
-		/* L utilisateur valide */
+		/* Formatting */
 		case GTK_RESPONSE_OK:			
 
     		/* Recuperation de la liste des boutons */
@@ -607,12 +570,13 @@ int requestformat(char *namedev)
     		/* Parcours de la liste */
     		while(pList)
     		{
-      			/* Le bouton est il selectionne */
+      			/* button selected? */
       			if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pList->data)))
        			{
-            		/* OUI -> on copie le label du bouton */
+            		/* get button label */
             		sLabel = gtk_button_get_label(GTK_BUTTON(pList->data));
-            		/* On met la liste a NULL pour sortir de la boucle */
+            		/* Get out */
+			
             		pList = NULL;
         		}
         		else
@@ -621,9 +585,9 @@ int requestformat(char *namedev)
             		pList = g_slist_next(pList);
         		}
     		}
-			printf("formatting %s in %s\n", namedev, sLabel);
+			//mkfss(namedev, sLabel, check);
 			break;
-			/* L utilisateur annule */
+			/* Exit */
 		case GTK_RESPONSE_CANCEL:
 		case GTK_RESPONSE_NONE:
 		default:
@@ -667,7 +631,7 @@ int swapformat(char *namedev)
 		/* L utilisateur valide */
 		case GTK_RESPONSE_OK:
 			// TODO : Reactivating real formatting
-			printf("formatting %s as swap\n", namedev);
+			//mkfss(namedev, "swap", 0);
 			break;
 			/* L utilisateur annule */
 		case GTK_RESPONSE_CANCEL:
@@ -698,22 +662,16 @@ void set_root_part(GtkWidget *widget, gpointer data)
 	{
 		if(rootpart)
 		{
-			GtkWidget *pQuestion = gtk_message_dialog_new (NULL,
-					GTK_DIALOG_MODAL,
-    					 GTK_MESSAGE_QUESTION,
-    					 GTK_BUTTONS_YES_NO,
-     					"Change your root partition?");
-
-			/* Affichage et attente d'une reponse */
-			switch(gtk_dialog_run(GTK_DIALOG(pQuestion)))
+			switch(fwife_question("Change root partition?"))
 			{
 				case GTK_RESPONSE_YES:
-					
-					gtk_widget_destroy(pQuestion);
+					if(rootpart->data)
+					{
+						g_free(rootpart->data);
+						rootpart->data = NULL;
+					}
 					break;
 				case GTK_RESPONSE_NO:
-					/* No-> destroy it and return */
-					gtk_widget_destroy(pQuestion);
 					return;
 			}
 		}
@@ -729,13 +687,7 @@ void set_root_part(GtkWidget *widget, gpointer data)
 		GList *point = g_list_nth(parts, 4*i+3);
 		if(point->data)
 			g_free(point->data);
-		point->data = mount;
-			
-		if(rootpart && rootpart->data)
-		{
-			g_free(rootpart->data);
-			rootpart->data = NULL;
-		}
+		point->data = mount;		
 		
 		rootpart = point;
 		
@@ -858,13 +810,13 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (comboparts), renderer, FALSE);
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (comboparts), renderer, "pixbuf", PIXBUF_COL, NULL);
 
-	//gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (combo), renderer, set_sensitive, NULL, NULL);
+	gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (comboparts), renderer, set_sensitive, NULL, NULL);
     
 	renderer = gtk_cell_renderer_text_new();
 	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (comboparts), renderer, TRUE);
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (comboparts), renderer,"text", TEXT_COL, NULL);
 
-	//gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (combo), renderer, set_sensitive, NULL, NULL);
+	gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (comboparts), renderer, set_sensitive, NULL, NULL);
 		
 	diskinfo = gtk_label_new((char*)g_list_nth_data(devs,1));
 	gtk_box_pack_start (GTK_BOX (pHBox), diskinfo, FALSE, TRUE, 50);
@@ -891,12 +843,14 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	g_object_unref (model);
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
 	
+	// a small icon for swap and root partition
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", TYPE_COLUMN, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
+	// partition name
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
@@ -904,6 +858,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	gtk_tree_view_column_set_title(col, "Partition");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 		
+	// partition size
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
@@ -911,6 +866,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	gtk_tree_view_column_set_title(col, "Size");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
 	
+	// current filesystem
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
@@ -918,6 +874,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	gtk_tree_view_column_set_title(col, "Filesystem");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
+	// mountpoint
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	g_object_set(renderer, "editable", TRUE, NULL);
@@ -931,7 +888,6 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
 	gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
       
-	//g_signal_connect (selection, "changed", G_CALLBACK (selection_changed), (gpointer) assist);	
 	pScrollbar = gtk_scrolled_window_new(NULL, NULL);
 	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
@@ -947,7 +903,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkWidget *image;
 	mainpart = gtk_button_new_with_label("Set as root partition");
 	swappart = gtk_button_new_with_label("Set as swap partition");
-	format = gtk_button_new_with_label("Format partition");	
+	format = gtk_button_new_with_label("Format partition");
 	image = gtk_image_new_from_stock (GTK_STOCK_DELETE, 3);
 	gtk_button_set_image(GTK_BUTTON(format), image);
 	image = gtk_image_new_from_stock (GTK_STOCK_HOME, 3);
@@ -957,22 +913,32 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	image = gtk_image_new_from_stock (GTK_STOCK_CONVERT, 3);
 	gtk_button_set_image(GTK_BUTTON(swappart), image);
 	g_signal_connect (swappart, "clicked", G_CALLBACK (set_swap_part), view);
-	g_signal_connect (format, "clicked", G_CALLBACK (set_format_part), view);	
+	g_signal_connect (format, "clicked", G_CALLBACK (set_format_part), view);
 	g_signal_connect(G_OBJECT(comboparts), "changed", G_CALLBACK(change_part_list), view);	
 	
 	gtk_box_pack_start (GTK_BOX (buttonlist), mainpart, TRUE, FALSE, 10);
 	gtk_box_pack_start (GTK_BOX (buttonlist), swappart, TRUE, FALSE, 10);
-	gtk_box_pack_start (GTK_BOX (buttonlist), format, FALSE, FALSE, 10);
-	
-	//* End scrolling *//
-	
+	gtk_box_pack_start (GTK_BOX (buttonlist), format, TRUE, FALSE, 10);
+		
 	return pVBox;
 }
 
 int prerun(GList **config)
 {
-	detect_parts(0);
-	gtk_combo_box_set_active (GTK_COMBO_BOX (comboparts), 0);
+	switch(fwife_question("Do you want to run gparted to create/modify partitions?"))
+	{
+		case GTK_RESPONSE_YES:
+			fw_system_interactive("gparted");
+			break;
+		case GTK_RESPONSE_NO:
+			break;
+	}
+
+	if(allparts == NULL)
+	{
+		detect_parts(0);
+		gtk_combo_box_set_active (GTK_COMBO_BOX (comboparts), 0);
+	}
 	return 0;
 }
 

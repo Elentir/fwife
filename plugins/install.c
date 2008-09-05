@@ -52,21 +52,32 @@ int installpkgs(GList *pkgs, GList **config)
 {
 	int i = 0;
 	PM_LIST *pdata = NULL, *pkgsl;	
-	unsigned int flags = 0;
 	char *ptr;
 
-	//flags = PM_TRANS_FLAG_DOWNLOADONLY;
+	if(pacman_initialize(TARGETDIR) == -1) {
+		LOG("failed to initialize pacman library (%s)\n", pacman_strerror(pm_errno));
+	}
+
+	if (pacman_parse_config("/etc/pacman-g2.conf", NULL, "") == -1) {
+			LOG("Failed to parse pacman-g2 configuration file (%s)", pacman_strerror(pm_errno));
+			return(-1);
+	}
 	
-	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, flags, NULL, NULL, NULL) == -1)
-		printf("Failed to initialize transaction\n");	
+	PM_DB *db_local = pacman_db_register("local");
+	if(db_local == NULL) {
+		LOG("could not register 'local' database (%s)\n", pacman_strerror(pm_errno));
+	}
+
+	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, 0, NULL, NULL, NULL) == -1)
+		printf("Failed to initialize transaction %s\n", pacman_strerror (pm_errno));	
 	
 	for (i = 0; i<g_list_length(pkgs); i++)
 	{
 		ptr = strdup((char*)g_list_nth_data(pkgs, i));
-		if(pacman_trans_addtarget(drop_version(ptr)))
-			return(-1);
+		if(pacman_trans_addtarget(strdup(ptr)))
+			printf("Error adding packet %s\n", pacman_strerror (pm_errno));
 		FREE(ptr);
-	}
+	}	
 
 	//* prepare transaction *//
 	if(pacman_trans_prepare(&pdata) == -1)
@@ -84,10 +95,9 @@ int installpkgs(GList *pkgs, GList **config)
 	}
 
 	/* commit transaction */
-	if (pacman_trans_commit(NULL) == -1)
+	if (pacman_trans_commit(&pdata) == -1)
 	{
 		printf("Failed to commit transaction (%s)\n", pacman_strerror (pm_errno));					
-		return -1;
 	}
 	
 	/* release the transaction */

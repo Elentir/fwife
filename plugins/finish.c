@@ -13,7 +13,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONFIRM,
 	TRUE,
-	NULL,
+	prerun,
 	run,
 	NULL // dlopen handle
 };
@@ -34,6 +34,11 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkWidget *widget = gtk_label_new (_("Installation completed! We hope that you enjoy Frugalware!"));
 	
 	return widget;
+}
+
+int prerun(GList **config)
+{
+	return 0;
 }
 
 int run(GList **config)

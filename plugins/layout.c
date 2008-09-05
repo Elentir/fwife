@@ -11,7 +11,7 @@
 #include "common.h"
 
 GList *layoutl;
-gchar *selected = NULL;
+GtkWidget *view;
 
 plugin_t plugin =
 {
@@ -73,6 +73,7 @@ int find(char *dirname)
 	return(0);
 }
 
+//* Need to have one selected - disable next button if unselected *//
 void selection_changed(GtkTreeSelection *selection, gpointer data)
 {
 	GtkTreeView *treeview;
@@ -83,13 +84,11 @@ void selection_changed(GtkTreeSelection *selection, gpointer data)
   		
 	if (gtk_tree_selection_get_selected (selection, &model, &iter))
    	{
-		gtk_tree_model_get (model, &iter, 0, &selected, -1);
-		gtk_assistant_set_page_complete (GTK_ASSISTANT(data),  gtk_assistant_get_nth_page(GTK_ASSISTANT(data),gtk_assistant_get_current_page(GTK_ASSISTANT (data))), TRUE);			
+		set_page_completed();	
 	}
 	else
 	{
-	set_page_completed();
-	selected = NULL;
+		set_page_incompleted();	
 	}
 		
 }
@@ -102,7 +101,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkTreeViewColumn *col;
 	GtkTreeIter iter;
 	GtkCellRenderer *renderer;
-	GtkWidget *view, *pScrollbar, *labelhelp, *pvbox;
+	GtkWidget *pScrollbar, *labelhelp, *pvbox;
 	GtkTreeSelection *selection;
 
 	if (layoutl)
@@ -127,7 +126,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
 	gtk_tree_view_column_set_title(col, "Code");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
-
+	
 	for(i=0; i < g_list_length(layoutl); ++i) 
 	{		
 		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
@@ -162,13 +161,23 @@ int run(GList **config)
 {
 	char *fn, *ptr;
 	FILE* fp;
+	GtkTreeModel *model = NULL;
+	GtkTreeIter iter;
+	char* selected;
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(view)));
+	
+	if(gtk_tree_selection_get_selected(selection, &model, &iter))
+	{
+		gtk_tree_model_get (model, &iter, 0, &selected, -1);
+	}
 	
 	if(strlen(selected) >= 7)
 		selected[strlen(selected)-7]='\0';
 
-	//LOG("selected layout '%s'", selected);
+	LOG("selected layout '%s'", selected);
 	ptr = g_strdup_printf("loadkeys /usr/share/keymaps/i386/%s.map.gz", selected);
-	//fw_system(ptr);
+	fw_system(ptr);
 	FREE(ptr);
 
 	fn = strdup("/tmp/setup_XXXXXX");

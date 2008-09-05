@@ -19,6 +19,9 @@ plugin_t *plugin_active;
 //* Widget for the assistant *//
 GtkWidget *assistant = NULL;
 
+//* Pages data *//
+PageInfo *pages = NULL;
+
 //* Function used for sort plugins with priorities *//
 int sort_plugins(gconstpointer a, gconstpointer b)
 {
@@ -95,27 +98,14 @@ int cleanup_plugins()
 //* Dialog box for quit the installation *//
 void cancel_install(GtkWidget *w, gpointer user_data)
 {
-   GtkWidget *dialog;
-
-   dialog = gtk_message_dialog_new (GTK_WINDOW(w),
-        GTK_DIALOG_MODAL,
-        GTK_MESSAGE_QUESTION,
-        GTK_BUTTONS_YES_NO,
-        _("Do you want to cancel frugalware installation?\n"));
-
-   int result = gtk_dialog_run (GTK_DIALOG (dialog));
+   int result = fwife_question("Do you want to cancel frugalware installation?\n");
    if(result == GTK_RESPONSE_YES)
    {
-        FREE(user_data);
+        FREE(pages);
         cleanup_plugins();
         gtk_main_quit();
-        return;
-   }
-   else
-   {
-          gtk_widget_destroy(dialog);
-          return;
-   }
+   }   
+    return;
 }
 
 //* Dialog Box when instllation finished *//
@@ -129,37 +119,27 @@ void close_install(GtkWidget *w, gpointer user_data)
                                         GTK_STOCK_OK,
                                         GTK_RESPONSE_ACCEPT,
                                         NULL);
-   label = gtk_label_new (_("Frugalware installation was sucessfully completed!\n Rebooting computer..."));
+   label = gtk_label_new (_("Frugalware installation was sucessfully completed!\n\nYou can reboot your computer..."));
 
    gtk_container_add (GTK_CONTAINER (GTK_DIALOG(dialog)->vbox), label);
    gtk_widget_show_all (dialog);
    gtk_dialog_run (GTK_DIALOG (dialog));
 
-   FREE(user_data);
+   FREE(pages);
    cleanup_plugins();
    gtk_main_quit();
    //fw_system_interactive("/sbin/reboot");
    return;
 }
 
-//* Set current page complete *//
-void set_page_completed()
-{
-    gtk_assistant_set_page_complete(GTK_ASSISTANT(assistant),  gtk_assistant_get_nth_page(GTK_ASSISTANT(assistant),gtk_assistant_get_current_page(GTK_ASSISTANT (assistant))), TRUE);
-}
-
-//* Set current page incomplete *//
-void set_page_incompleted()
-{
-    gtk_assistant_set_page_complete(GTK_ASSISTANT(assistant),  gtk_assistant_get_nth_page(GTK_ASSISTANT(assistant),gtk_assistant_get_current_page(GTK_ASSISTANT (assistant))), FALSE);
-}
-
+//* Load next plugin *//
 int plugin_next(GtkWidget *w, gpointer user_data)
 {
 	if(plugin_active->run(&config) == -1)
 	{
-	   	LOG("Error when running plugin %s\n", plugin_active->name);
-        	gtk_main_quit();
+	   	
+		LOG("Error when running plugin %s\n", plugin_active->name);
+		fwife_error("Error when running plugin. Please report");
 	}
     	// next plugin
 	plugin_active = g_list_nth_data(plugin_list, g_list_index(plugin_list, (gconstpointer)plugin_active)+1);
@@ -169,6 +149,7 @@ int plugin_next(GtkWidget *w, gpointer user_data)
 	return 0;
 }
 
+//* load previous plugin *//
 int plugin_previous(GtkWidget *w, gpointer user_data)
 {
 	plugin_active = g_list_nth_data(plugin_list, g_list_index(plugin_list, (gconstpointer)plugin_active)-1);
@@ -181,8 +162,7 @@ int main (int argc, char *argv[])
   GError *gerror = NULL;
   GdkColor color;
   plugin_t *plugin;
-  PageInfo *pages = NULL;
-
+  
   gtk_init (&argc, &argv);
 
   /* Create a new assistant widget with no pages. */
@@ -191,9 +171,9 @@ int main (int argc, char *argv[])
   gtk_window_set_title (GTK_WINDOW (assistant), _("Fwife : Frugalware Installer Front-End"));
 
   /* Connect signals with functions */
-  g_signal_connect (G_OBJECT (assistant), "destroy", G_CALLBACK (cancel_install), (gpointer) pages);
-  g_signal_connect (G_OBJECT (assistant), "cancel", G_CALLBACK (cancel_install), (gpointer) pages);
-  g_signal_connect (G_OBJECT (assistant), "close", G_CALLBACK (close_install), (gpointer) pages);
+  g_signal_connect (G_OBJECT (assistant), "destroy", G_CALLBACK (cancel_install), NULL);
+  g_signal_connect (G_OBJECT (assistant), "cancel", G_CALLBACK (cancel_install), NULL);
+  g_signal_connect (G_OBJECT (assistant), "close", G_CALLBACK (close_install), NULL);
 
   /* Some trick to connect buttons with plugin move functions */
   g_signal_connect(G_OBJECT(((GtkAssistant *) assistant)->forward), "clicked", G_CALLBACK(plugin_next), NULL);
@@ -252,4 +232,82 @@ int main (int argc, char *argv[])
   // begin event loop
   gtk_main ();
   return 0;
+}
+
+//* Others functions *//
+
+//* Just an error *//
+void fwife_error(char* error_str)
+{
+GtkWidget *error_dlg = NULL;
+if (!strlen(error_str))
+    return;
+error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_ERROR,
+                                         GTK_BUTTONS_OK,
+                                         "%s",
+                                         error_str);
+
+    gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+
+    gtk_dialog_run (GTK_DIALOG(error_dlg));
+
+    gtk_widget_destroy (error_dlg); 
+
+    return;
+}
+
+//* Fatal error : quit fwife *//
+void fwife_fatal_error(char* error_str)
+{
+GtkWidget *error_dlg = NULL;
+if (!strlen(error_str))
+    return;
+error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_ERROR,
+                                         GTK_BUTTONS_OK,
+                                         "%s",
+                                         error_str);
+
+    gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+
+    gtk_dialog_run (GTK_DIALOG(error_dlg));
+
+    gtk_widget_destroy (error_dlg);
+    
+    //
+    FREE(pages);
+    cleanup_plugins();
+    gtk_main_quit();
+
+    return;
+}
+
+//* A basic question *//
+int fwife_question(char* msg_str)
+{
+	GtkWidget *pQuestion;
+
+	pQuestion = gtk_message_dialog_new (GTK_WINDOW(assistant),
+					GTK_DIALOG_MODAL,
+       					GTK_MESSAGE_QUESTION,
+       					GTK_BUTTONS_YES_NO,
+       					msg_str);
+	int rep = gtk_dialog_run(GTK_DIALOG(pQuestion));
+	gtk_widget_destroy(pQuestion);
+	return(rep);
+}
+
+//* Set current page complete *//
+void set_page_completed()
+{
+    gtk_assistant_set_page_complete(GTK_ASSISTANT(assistant),  gtk_assistant_get_nth_page(GTK_ASSISTANT(assistant),gtk_assistant_get_current_page(GTK_ASSISTANT (assistant))), TRUE);
+}
+
+//* Set current page incomplete *//
+void set_page_incompleted()
+{
+    gtk_assistant_set_page_complete(GTK_ASSISTANT(assistant),  gtk_assistant_get_nth_page(GTK_ASSISTANT(assistant),gtk_assistant_get_current_page(GTK_ASSISTANT (assistant))), FALSE);
 }

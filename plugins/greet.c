@@ -41,6 +41,5 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 
 int run(GList **config)
 {
-	data_put(config, "netinstall", "");
 	return 0;
 }

@@ -260,8 +260,7 @@ int prepare_pkgdb(char *repo, GList **config, GList **syncs)
 	char *pacbindir, *pkgdb;
 	struct stat sbuf;
 	int ret;
-	PM_DB *i;
-	FILE *fp;
+	//PM_DB *i;	
 
 	pacbindir = g_strdup_printf("%s/frugalware-%s", SOURCEDIR, ARCH);
 	pkgdb = g_strdup_printf("%s/var/lib/pacman-g2/%s", TARGETDIR, repo);
@@ -272,74 +271,57 @@ int prepare_pkgdb(char *repo, GList **config, GList **syncs)
 		// pacman can't lock & log without these
 		makepath(g_strdup_printf("%s/tmp", TARGETDIR));
 		makepath(g_strdup_printf("%s/var/log", TARGETDIR));
-		if((char*)data_get(*config, "netinstall")==NULL)
+		LOG("parsing the pacman-g2 configuration file");
+		if (pacman_parse_config("/etc/pacman-g2.conf", cb_db_register, "") == -1) {
+			LOG("Failed to parse pacman-g2 configuration file (%s)", pacman_strerror(pm_errno));
+			return(-1);
+		}
+		
+		LOG("getting the database");
+		if (mydatabase == NULL)
 		{
-			makepath(pkgdb);
-			// TODO: use libarchive for this
-			fw_system(g_strdup_printf("tar xjf %s/%s.fdb -C %s", pacbindir, repo, pkgdb));
-			if ((fp = fopen("/etc/pacman-g2.conf", "w")) == NULL)
-			{
-				perror(_("Could not open output file for writing"));
-				return(1);
-			}
-			fprintf(fp, "[options]\n");
-			fprintf(fp, "LogFile     = /var/log/pacman-g2.log\n");
-			fprintf(fp, "[%s]\n", repo);
-			fprintf(fp, "Server = file://%s\n\n", pacbindir);
-			fclose(fp);
+			LOG("Could not register '%s' database (%s)", PACCONF, pacman_strerror(pm_errno));
+			return(-1);
 		}
 		else
 		{
-			LOG("parsing the pacman-g2 configuration file");
-			if (pacman_parse_config("/etc/pacman-g2.conf", cb_db_register, "") == -1) {
-				LOG("Failed to parse pacman-g2 configuration file (%s)", pacman_strerror(pm_errno));
-				return(-1);
+			LOG("updating the database");
+			ret = pacman_db_update(1, mydatabase);
+			if(ret == 0) {
+				LOG("database update done");
 			}
-			
-			LOG("getting the database");
-			if (mydatabase == NULL)
-			{
-				LOG("Could not register '%s' database (%s)", PACCONF, pacman_strerror(pm_errno));
-				return(-1);
-			}
-			else
-			{
-				LOG("updating the database");
-				ret = pacman_db_update(1, mydatabase);
-				if(ret == 0) {
-					LOG("database update done");
-				}
-				if (ret == -1) {
-					LOG("database update failed");
-					if(pm_errno == PM_ERR_DB_SYNC) {
-						LOG("Failed to synchronize %s", PACCONF);
-						return(-1);
-					} else {
-						LOG("Failed to update %s (%s)", PACCONF, pacman_strerror(pm_errno));
-						return(-1);
-					}
+			if (ret == -1) {
+				LOG("database update failed");
+				if(pm_errno == PM_ERR_DB_SYNC) {
+					LOG("Failed to synchronize %s", PACCONF);
+					return(-1);
+				} else {
+					LOG("Failed to update %s (%s)", PACCONF, pacman_strerror(pm_errno));
+					return(-1);
 				}
 			}
-			
-			LOG("cleaning up the database");
-			pacman_db_unregister(mydatabase);
-			mydatabase = NULL;
 		}
+		
+		LOG("cleaning up the database");
+		pacman_db_unregister(mydatabase);
+		mydatabase = NULL;
 	}
-
 	// register the database
-	i = pacman_db_register(PACCONF);
+	PM_DB *i = pacman_db_register(PACCONF);
 	if(i==NULL)
 	{
 		fprintf(stderr, "could not register '%s' database (%s)\n",
 			PACCONF, pacman_strerror(pm_errno));
-		return(1);
+		return(-1);
 	}
 	else
+	{
 		*syncs = g_list_append(*syncs, i);
+	}
 	return(0);
 }
 
+//* A categorie as been toggled *//
 static void fixed_toggled_cat (GtkCellRendererToggle *cell,gchar *path_str, gpointer data)
 {
 	GtkTreeModel *model = (GtkTreeModel *)data;
@@ -380,6 +362,7 @@ static void fixed_toggled_cat (GtkCellRendererToggle *cell,gchar *path_str, gpoi
 	gtk_tree_path_free (path);
 }
 
+//* Packet toggled *//
 static void fixed_toggled_pack (GtkCellRendererToggle *cell,gchar *path_str, gpointer data)
 {
 	GtkTreeModel *model = (GtkTreeModel *)data;
@@ -413,6 +396,7 @@ static void fixed_toggled_pack (GtkCellRendererToggle *cell,gchar *path_str, gpo
 	gtk_tree_path_free (path);
 }
 
+//* Packet selection have changed, update description *//
 void packet_changed(GtkTreeSelection *selection, gpointer data)
 {
 	GtkTreeView *treeview;
@@ -775,7 +759,7 @@ int run(GList **config)
 	for(i=0;i<g_list_length(allpkgs);i++)
 	{
 		ptr = strdup((char*)g_list_nth_data(allpkgs, i));
-		if(pacman_trans_addtarget(drop_version(ptr)))
+		if(pacman_trans_addtarget(ptr))
 			return(-1);
 		FREE(ptr);
 	}
@@ -807,11 +791,10 @@ int run(GList **config)
 				      (char*)pacman_pkg_getinfo(pkg, PM_PKG_VERSION));
 		allpkgs = g_list_append(allpkgs, ptr);
 	}
-	pacman_trans_commit(&junk);
 	pacman_trans_release();
 	data_put(config, "packages", allpkgs);
 	
-	//pacman_release();
+	pacman_release();
 	return 0;
 }
  

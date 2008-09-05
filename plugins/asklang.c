@@ -11,6 +11,8 @@
 
 #define LANGSNUM 13
 
+GtkWidget *view;
+
 // all languages
 char *langs[] =
 {
@@ -28,9 +30,6 @@ char *langs[] =
 	"sk_SK", "Slovak / Slovenèina",
 	"sv_SE", "Swedish / Svenska"
 };
-
-// current selection ( default : en_US)
-gchar *selected = "en_US";
 
 enum
 {
@@ -76,26 +75,6 @@ int setcharset(char *name, GList **config)
 	return(0);
 }
 
-// called when selection into tree view list changed
-void selection_changed(GtkTreeSelection *selection, gpointer data)
-{
-	GtkTreeView *treeview;
-  	GtkTreeModel *model;
-  	GtkTreeIter iter;
-	
-  	treeview = gtk_tree_selection_get_tree_view (selection);
-  		
-	if (gtk_tree_selection_get_selected (selection, &model, &iter))
-   	{
-		gtk_tree_model_get (model, &iter, 1, &selected, -1);			
-	}
-	else
-	{
-		// set as default if unselected
-		selected = "en_US";
-	}
-}
-
 GtkWidget *load_gtk_widget(GtkWidget *assist)
 {
 	int i;
@@ -104,7 +83,6 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkTreeViewColumn *col;
 	GtkTreeIter iter;
 	GtkCellRenderer *renderer;
-	GtkWidget *view;
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
 	GdkPixbuf *pix;
@@ -162,13 +140,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
       
-        //* if selection changed *//
-	g_signal_connect (selection,
-	  		  "changed",
-			  G_CALLBACK (selection_changed),
-			  (gpointer) assist);
-	
-	//* Just a scrollbar if many languages *//
+        //* Just a scrollbar if many languages *//
 	pScrollbar = gtk_scrolled_window_new(NULL, NULL);
 	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
@@ -181,7 +153,19 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 int run(GList **config)
 {
 	char *fn;
-	FILE* fp;	
+	FILE* fp;
+
+	GtkTreeModel *model = NULL;
+	GtkTreeIter iter;
+	char* selected;
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(view)));
+	if(gtk_tree_selection_get_selected(selection, &model, &iter))
+	{
+		gtk_tree_model_get (model, &iter, COLUMN_LANG_CODE, &selected, -1);
+	}
+	else
+		selected = "en_US";	
 
 	// TODO : Useless, translation for gettext need to be do before loading plugins
 	setenv("LC_ALL", selected, 1);
@@ -241,7 +225,7 @@ int run(GList **config)
 	if ((fp = fopen(fn, "w")) == NULL)
 	{
 		perror(_("Could not open output file for writing"));
-		return(1);
+		return(-1);
 	}
 	fprintf(fp, "#!/bin/sh\n\n"
 		"# /etc/profile.d/lang.sh\n\n"

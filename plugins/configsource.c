@@ -7,12 +7,11 @@
 #include "../util.h"
 #include "common.h"
 
-//* Initial mirror list *//
 GList *mirrorlist = NULL;
-//* Selected mirror list *//
 GList *newmirrorlist = NULL;
-//* Custom mirror list *//
 GList *custommirrorlist = NULL;
+
+GtkWidget *view;
 
 enum
 {
@@ -22,6 +21,14 @@ enum
   NUM_COLUMNS
 };
 
+struct
+{
+gboolean checked;
+gchar *name;
+gchar *contry;
+} dataserv_t;
+
+
 plugin_t plugin =
 {
 	"configsource",	
@@ -30,7 +37,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
-	NULL,
+	prerun,
 	run,
 	NULL // dlopen handle
 };
@@ -52,7 +59,7 @@ GList *getmirrors(char *fn)
 	GList *mirrors=NULL;
 
 	if ((fp = fopen(fn, "r"))== NULL) { //fopen error
-		LOG("Could not open output file %s for reading", fn);
+		printf("Could not open output file for reading");
 		return(NULL);
 	}
 
@@ -90,13 +97,12 @@ int updateconfig(char *fn, GList *mirrors)
 	FILE *fp;
 	short i;
 
-	if ((fp = fopen(fn, "w"))== NULL)
+	if ((fp = fopen("/tmp/essaipacman.conf", "w"))== NULL)
 	{
 		perror(_("Could not open output file for writing"));
 		return(1);
 	}
 	fprintf(fp, "#\n# %s repository\n#\n\n[%s]\n\n", PACCONF, PACCONF);
-
 	for (i=0; i<g_list_length(mirrors); i+=2) {
 		// do not change the country style as it will cause getmirrors() misbehaviour
 		fprintf(fp, "# - %s -\n", (char *)g_list_nth_data(mirrors, i+1));
@@ -107,8 +113,9 @@ int updateconfig(char *fn, GList *mirrors)
 	return(0);
 }
 
-//* When a server is toggled *//
-static void fixed_toggled (GtkCellRendererToggle *cell, gchar *path_str, gpointer  data)
+static void fixed_toggled (GtkCellRendererToggle *cell,
+	       gchar                 *path_str,
+	       gpointer               data)
 {
   GtkTreeModel *model = (GtkTreeModel *)data;
   GtkTreeIter  iter;
@@ -122,13 +129,11 @@ static void fixed_toggled (GtkCellRendererToggle *cell, gchar *path_str, gpointe
   gtk_tree_model_get (model, &iter, COLUMN_NAME, &name, -1);
   gtk_tree_model_get (model, &iter, COLUMN_FROM, &from, -1);
   
-  //* Add server to the favourite list *//
-  if(!(strcmp(from, "CUSTOM"))) 
-  {
+  if(!(strcmp(from, "CUSTOM"))) {
 	if(fixed == FALSE)
-		custommirrorlist = g_list_insert(custommirrorlist, strdup(name),0);
+	custommirrorlist = g_list_insert(custommirrorlist, strdup(name),0);
   	else
-		custommirrorlist =  g_list_remove (custommirrorlist, (gconstpointer) name);
+	custommirrorlist =  g_list_remove (custommirrorlist, (gconstpointer) name);
   }
   else
   {
@@ -141,14 +146,13 @@ static void fixed_toggled (GtkCellRendererToggle *cell, gchar *path_str, gpointe
   /* do something with the value */
   fixed ^= 1;
 
-  /* insert new value */
+  /* set new value */
   gtk_list_store_set (GTK_LIST_STORE (model), &iter, COLUMN_USE, fixed, -1);
 
   /* clean up */
   gtk_tree_path_free (path);
 }
 
-//* Add a new custom mirror *//
 void add_mirror (GtkWidget *button, gpointer data)
 {
   GtkTreeIter iter;
@@ -158,16 +162,13 @@ void add_mirror (GtkWidget *button, gpointer data)
   GtkWidget* pBoite;
   GtkWidget* pEntry, *label;
   const gchar* sName;
-  extern GtkWidget *assistant;
 
   pBoite = gtk_dialog_new_with_buttons(_("Add a personalized server"),
-        GTK_WINDOW(assistant),
+        NULL,
         GTK_DIALOG_MODAL,
         GTK_STOCK_OK,GTK_RESPONSE_OK,
         GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,
         NULL);
-
-  gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
 
     pEntry = gtk_entry_new();
     label = gtk_label_new(_("Enter here the address of the server you want to add!\n This can be a local server or a distant one!")); 
@@ -227,19 +228,10 @@ void remove_mirror (GtkWidget *widget, gpointer data)
 //* Create the array of mirror widget *//
 GtkWidget *mirrorview()
 {
-	int i;	
 	GtkListStore *store;
 	GtkTreeModel *model;
 	GtkTreeViewColumn *col;
-	GtkTreeIter iter;
-	GtkCellRenderer *renderer;
-	GtkWidget *view;	
-	char *fn;
-	
-	//* Load mirrors from file *//
-	fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
-	mirrorlist = getmirrors(fn);
-	FREE(fn);
+	GtkCellRenderer *renderer;		
 
 	store = gtk_list_store_new(3, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
@@ -271,17 +263,6 @@ GtkWidget *mirrorview()
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
 	gtk_tree_view_column_set_title(col, "Froms");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
-
-	//* Insert mirrors into treeview *//
-	for(i=0; i < g_list_length(mirrorlist); i+=3) 
-	{		
-		gboolean checked = FALSE;
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
-		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter,
-			0, checked,1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
-		
-	}
 
 	return view;
 }
@@ -316,7 +297,6 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 
 	
 	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 0);
-	// buttons for custom mirrors
 	button = gtk_button_new_from_stock (GTK_STOCK_ADD );
         g_signal_connect (button, "clicked",
                         G_CALLBACK (add_mirror), view);
@@ -328,6 +308,31 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
         gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);
 
 	return pVBox;
+}
+
+int prerun(GList **config)
+{
+	GtkTreeIter iter;
+	char *fn;
+	int i;
+	
+	fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
+	mirrorlist = getmirrors(fn);
+	FREE(fn);
+
+	if(mirrorlist)
+	{
+	for(i=0; i < g_list_length(mirrorlist); i+=3) 
+	{		
+		gboolean checked = FALSE;
+		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
+		
+		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter,
+			0, checked,1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
+		
+	}
+	}
+	return 0;
 }
 
 int run(GList **config)
@@ -360,14 +365,15 @@ int run(GList **config)
 
 	for(i=0; i < g_list_length(custommirrorlist); i++)
 	{
-		newmirrorlist = g_list_insert(newmirrorlist,g_list_nth_data(custommirrorlist, i),0);
-		newmirrorlist = g_list_insert(newmirrorlist,"CUSTOM",1);
+		newmirrorlist = g_list_prepend(newmirrorlist,"CUSTOM");
+		newmirrorlist = g_list_prepend(newmirrorlist,g_list_nth_data(custommirrorlist, i));
+		
 	}
 
 	updateconfig(fn, newmirrorlist);
-	
-	// TOFIX : Keep it if user go previous but need to be free
+
 	//g_list_free(custommirrorlist);
+	// g_list_free(mirrorlist);
 	FREE(fn); 
 	return(0);
 }

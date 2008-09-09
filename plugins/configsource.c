@@ -97,7 +97,7 @@ int updateconfig(char *fn, GList *mirrors)
 	FILE *fp;
 	short i;
 
-	if ((fp = fopen("/tmp/essaipacman.conf", "w"))== NULL)
+	if ((fp = fopen(fn, "w"))== NULL)
 	{
 		perror(_("Could not open output file for writing"));
 		return(1);
@@ -315,6 +315,15 @@ int prerun(GList **config)
 	GtkTreeIter iter;
 	char *fn;
 	int i;
+
+	switch(fwife_question("You need a net connexion (TODO : local version :p),\n do you want to configure your network?"))
+	{
+		case GTK_RESPONSE_YES:
+			fw_system_interactive("gnetconfig");
+			break;
+		case GTK_RESPONSE_NO:
+			break;
+	}
 	
 	fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
 	mirrorlist = getmirrors(fn);

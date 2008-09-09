@@ -7,6 +7,7 @@
 
 GList *userslist=NULL;
 GtkWidget *rootpass, *rootverify;
+GtkWidget *userorigimg;
 
 plugin_t plugin =
 {
@@ -15,7 +16,7 @@ plugin_t plugin =
 	55,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
-	FALSE,
+	TRUE,
 	NULL,
 	run,
 	NULL // dlopen handle
@@ -68,7 +69,7 @@ void add_user (GtkWidget *widget, gpointer data)
     	GtkWidget *pFrame;
     	GtkWidget *pVBoxFrame;
     	GtkWidget *pLabel;
-
+	
 	extern GtkWidget *assistant;
 
 	GtkTreeIter iter;
@@ -154,11 +155,19 @@ void add_user (GtkWidget *widget, gpointer data)
 	    sShell = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryShell));
 	    sHome = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryHome));
 	    if(strcmp(sPass, sVerify))
-		gtk_widget_destroy(pBoite);
+	    {
+		    gtk_widget_destroy(pBoite);
+		    fwife_error(_("Password verification incorrect"));
+		    return;
+	    }
 	    if(g_list_find_custom(userslist, (gconstpointer) sName, cmp_users) != NULL)
-		gtk_widget_destroy(pBoite);	 
+	    {
+		    gtk_widget_destroy(pBoite);
+		    fwife_error(_("A user get the same name"));
+		    return;
+	    }
             gtk_list_store_append (GTK_LIST_STORE (model), &iter);
-	    userimg = gdk_pixbuf_new_from_file ("images/user.png", NULL);
+	    userimg = gtk_image_get_pixbuf (GTK_IMAGE(userorigimg));
 	    cellview = gtk_cell_view_new ();
 	    passimg = gtk_widget_render_icon (cellview, GTK_STOCK_DIALOG_AUTHENTICATION,
 					GTK_ICON_SIZE_BUTTON, NULL);
@@ -203,6 +212,8 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	//* For root entry end of page *//
 	GtkWidget *hboxroot1, *hboxroot2;
 	GtkWidget *rootlabel, *verifylabel;
+	
+	userorigimg = gtk_image_new_from_file("images/user.png");
 
 	GtkListStore *store;
 	GtkTreeModel *model;
@@ -213,7 +224,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkTreeSelection *selection;
 
 	vboxp = gtk_vbox_new(FALSE, 5);
-	hbox = gtk_hbox_new(FALSE, 5);
+	hbox = gtk_hbox_new(FALSE, 5);	
 
 	info = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(info), "<span face=\"Courier New\"><b>A litle bit help</b></span>\n");	
@@ -319,18 +330,36 @@ int run(GList **config)
 		shell = (char*)g_list_nth_data(userslist, i+1);
 		home = (char*)g_list_nth_data(userslist, i+2);
 		pass = (char*)g_list_nth_data(userslist, i+3);
-
-		// TODO : home = "" and shell = ""
-		ptr = g_strdup_printf("yes \"\"|chroot ./ /usr/sbin/useradd -d %s -s %s -m %s", home, shell, user);
-		fw_system(ptr);
-		FREE(ptr);
-		ptr = g_strdup_printf("echo %s:%s |chroot ./ /usr/sbin/chpasswd", user, pass);
-		fw_system(ptr);
-		FREE(ptr);
+		if(strlen(pass))
+		{
+			if(!strlen(shell) && !strlen(home))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -p%s %s", pass, user);
+			else if(!strlen(shell))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -p%s -m %s", home, pass, user);
+			else if(!strlen(home))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -s %s -p%s -m %s", shell, pass, user);
+			else
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -s %s -p%s -m %s", home, shell, pass, user);
+		}
+		else
+		{
+			if(!strlen(shell) && !strlen(home))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd %s", user);
+			else if(!strlen(shell))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -m %s", home, user);
+			else if(!strlen(home))
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -s %s -m %s", shell, user);
+			else
+				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -s %s -m %s", home, shell, user);
+		}
+		if(fw_system(ptr) != 0)
+			fwife_error(_("A user can be added"));
+		FREE(ptr);		
 	}
 		
 	pass = (char*)gtk_entry_get_text(GTK_ENTRY(rootpass));
-	ptr = g_strdup_printf("echo %s:%s |chroot ./ /usr/sbin/chpasswd", "root", pass);
+	if(!strcmp(pass, ""))
+		ptr = g_strdup_printf("echo %s:%s |chroot ./ /usr/sbin/chpasswd", "root", pass);
 	fw_system(ptr);
 	FREE(ptr);	
 	return 0;

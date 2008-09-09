@@ -300,6 +300,47 @@ int fwife_question(char* msg_str)
 	return(rep);
 }
 
+
+//* A simple entry *//
+char* fwife_entry(char* title, char* msg_str, char* defaul)
+{
+	char *str;
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(title,
+        				GTK_WINDOW(assistant),
+        				GTK_DIALOG_MODAL,
+        				GTK_STOCK_OK,GTK_RESPONSE_OK,
+        				NULL);
+
+	GtkWidget *labelinfo = gtk_label_new(msg_str);
+	GtkWidget *pEntry = gtk_entry_new();
+	if(defaul)
+		gtk_entry_set_text(GTK_ENTRY(pEntry), defaul);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
+   	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), pEntry, TRUE, FALSE, 5);
+
+    	/* Affichage des elements de la boite de dialogue */
+   	 gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
+
+    	/* On lance la boite de dialogue et on recupere la reponse */
+    	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
+    	{
+        /* L utilisateur valide */
+        case GTK_RESPONSE_OK:
+            str = strdup((char*)gtk_entry_get_text(GTK_ENTRY(pEntry)));
+            break;
+        /* L utilisateur annule */
+        case GTK_RESPONSE_CANCEL:
+        case GTK_RESPONSE_NONE:
+        default:
+            str = NULL;
+            break;
+    	}
+
+    	/* Destruction de la boite de dialogue */
+    	gtk_widget_destroy(pBoite);
+	return str;
+}
+
 //* Set current page complete *//
 void set_page_completed()
 {

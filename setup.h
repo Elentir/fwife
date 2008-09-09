@@ -60,5 +60,6 @@ void set_page_incompleted();
 void fwife_fatal_error(char *msg);
 void fwife_error(char *msg);
 int fwife_question(char *msg);
+char* fwife_entry(char *, char*, char*);
 
 #endif // SETUP_H_INCLUDED

@@ -15,12 +15,24 @@ LDFLAGS += -L../libfwtimeconfig -lfwtimeconfig
 CFLAGS += -I../libfwgrubconfig
 LDFLAGS += -L../libfwgrubconfig -lfwgrubconfig
 
+# fwnetconfig
+CFLAGS += -I../libfwnetconfig
+LDFLAGS += -L../libfwnetconfig -lfwnetconfig
+
 # fwutil
 CFLAGS += -I../libfwutil
 LDFLAGS += -L../libfwutil -lfwutil
 
-#PLUGINS=greet configsource asklang layout install select partdisk timeconf grubconf usersconf timeconf finish
-PLUGINS=greet usersconf timeconf finish
+# fwmouseconfig
+CFLAGS += -I../libfwmouseconfig
+LDFLAGS += -L../libfwmouseconfig -lfwmouseconfig
+
+# fwxconfig
+CFLAGS += -I../libfwxconfig
+LDFLAGS += -L../libfwxconfig -lfwxconfig
+
+#PLUGINS=greet configsource asklang layout install select partdisk timeconf grubconf usersconf timeconf postconf netconf finish
+PLUGINS=greet netconf finish
 
 all: $(addsuffix .so,$(PLUGINS))
 

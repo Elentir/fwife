@@ -257,12 +257,11 @@ GList *getcat(PM_DB *db, GList *syncs)
 
 int prepare_pkgdb(char *repo, GList **config, GList **syncs)
 {
-	char *pacbindir, *pkgdb;
+	char *pkgdb;
 	struct stat sbuf;
 	int ret;
 	//PM_DB *i;	
 
-	pacbindir = g_strdup_printf("%s/frugalware-%s", SOURCEDIR, ARCH);
 	pkgdb = g_strdup_printf("%s/var/lib/pacman-g2/%s", TARGETDIR, repo);
 
 	// prepare pkgdb if necessary
@@ -647,6 +646,7 @@ int prerun(GList **config)
 		return(1);
 	}
 	
+	chdir(TARGETDIR);	
 	pacman_set_option(PM_OPT_LOGMASK, -1);
 	pacman_set_option(PM_OPT_LOGCB, (long)cb_log);
 	if(pacman_set_option(PM_OPT_DBPATH, (long)PM_DBPATH) == -1)
@@ -755,12 +755,11 @@ int run(GList **config)
 
 	//* Check for missing dependency *//
 	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, PM_TRANS_FLAG_NOCONFLICTS, NULL, NULL, NULL) == -1)
-		return(1);
+		return(-1);
 	for(i=0;i<g_list_length(allpkgs);i++)
 	{
-		ptr = strdup((char*)g_list_nth_data(allpkgs, i));
-		if(pacman_trans_addtarget(ptr))
-			return(-1);
+		ptr = strdup(drop_version((char*)g_list_nth_data(allpkgs, i)));
+		pacman_trans_addtarget(ptr);		
 		FREE(ptr);
 	}
 	g_list_free(allpkgs);

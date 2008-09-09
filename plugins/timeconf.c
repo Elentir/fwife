@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <libfwutil.h>
-//#include <libfwtimeconfig.h>
+#include <libfwtimeconfig.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/types.h>
@@ -55,6 +55,78 @@ plugin_t *info()
 int sort_zones(gconstpointer a, gconstpointer b)
 {
 	return(strcmp(a, b));
+}
+
+char* select_mode()
+{
+	char *modes[] = 
+	{
+		"localtime", _("Hardware clock is set to local time"),
+		"UTC", _("Hardware clock is set to UTC/GMT")
+	};
+	
+	GtkWidget *combo;
+	GtkTreeIter iter;
+	GtkListStore *store;
+	gint i;
+	char *ptr;
+
+	extern GtkWidget *assistant;
+	GtkTreeModel *model;
+
+	store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
+	combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
+	g_object_unref (GTK_TREE_MODEL (store));
+	gtk_widget_set_size_request(combo, 350, 40);
+	    
+	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
+	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 0, NULL);
+    
+	renderer = gtk_cell_renderer_text_new();
+	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
+	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 1, NULL);
+	
+
+	for (i = 0; i < 4; i+=2)
+	{
+		gtk_list_store_append (store, &iter);
+		gtk_list_store_set (store, &iter, 0, modes[i], 1, modes[i+1], -1);
+	}	
+
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Time mode configuration",
+        				GTK_WINDOW(assistant),
+        				GTK_DIALOG_MODAL,
+        				GTK_STOCK_OK,GTK_RESPONSE_OK,
+        				NULL);
+	
+	GtkWidget *label = gtk_label_new("Select UTC or local");
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), label, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), combo, TRUE, FALSE, 10);	
+	gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
+	
+
+    	/* Affichage des elements de la boite de dialogue */
+    	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
+
+   	/* On lance la boite de dialogue et on recupere la reponse */
+    	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
+    	{
+        	case GTK_RESPONSE_OK:
+	
+		gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter);
+		model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+		gtk_tree_model_get (model, &iter, 0, &ptr, -1);
+		break;
+
+        	case GTK_RESPONSE_CANCEL:
+        	case GTK_RESPONSE_NONE:
+        	default: 
+            		ptr = NULL;
+			break;
+    	}
+	gtk_widget_destroy(pBoite);
+	return ptr;
 }
 
 //* Parsing file to get zones, description of each zone, etc
@@ -155,6 +227,10 @@ int prerun(GList **config)
 	int i;
 	GtkTreeIter iter;
 	fwifetime_find();
+
+	char *ptr = select_mode();
+	if(ptr)
+		fwtime_hwclockconf(CLOCKFILE, ptr);
 		
 	//* Add zones to the list *//
 	if(zonetime)

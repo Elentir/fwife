@@ -8,10 +8,8 @@
 #include "common.h"
 
 GList *mirrorlist = NULL;
-GList *newmirrorlist = NULL;
-GList *custommirrorlist = NULL;
 
-GtkWidget *view;
+GtkWidget *viewserver;
 
 enum
 {
@@ -20,14 +18,6 @@ enum
   COLUMN_FROM,
   NUM_COLUMNS
 };
-
-struct
-{
-gboolean checked;
-gchar *name;
-gchar *contry;
-} dataserv_t;
-
 
 plugin_t plugin =
 {
@@ -49,7 +39,7 @@ plugin_t *info()
 
 char *desc()
 {
-	return _("Configuring the source of the installation");
+	return (_("Configuring the source of the installation"));
 }
 
 GList *getmirrors(char *fn)
@@ -129,20 +119,6 @@ static void fixed_toggled (GtkCellRendererToggle *cell,
   gtk_tree_model_get (model, &iter, COLUMN_NAME, &name, -1);
   gtk_tree_model_get (model, &iter, COLUMN_FROM, &from, -1);
   
-  if(!(strcmp(from, "CUSTOM"))) {
-	if(fixed == FALSE)
-	custommirrorlist = g_list_insert(custommirrorlist, strdup(name),0);
-  	else
-	custommirrorlist =  g_list_remove (custommirrorlist, (gconstpointer) name);
-  }
-  else
-  {
-	if(fixed == FALSE)
-		newmirrorlist = g_list_insert(newmirrorlist, strdup(name),0);
-  	else
-		newmirrorlist =  g_list_remove (newmirrorlist, (gconstpointer) name);
-  }
-
   /* do something with the value */
   fixed ^= 1;
 
@@ -182,9 +158,7 @@ void add_mirror (GtkWidget *button, gpointer data)
             sName = gtk_entry_get_text(GTK_ENTRY(pEntry));
             gtk_list_store_append (GTK_LIST_STORE (model), &iter);
             gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                      0, TRUE, 1, sName, 2, "CUSTOM",
-                      -1);
-	    custommirrorlist = g_list_insert(custommirrorlist, strdup(sName),0);
+                      0, TRUE, 1, sName, 2, "CUSTOM", -1);
 	    gtk_widget_destroy(pBoite);
             break;
         case GTK_RESPONSE_CANCEL:
@@ -215,7 +189,6 @@ void remove_mirror (GtkWidget *widget, gpointer data)
       // don't delete an "default" mirror
       if(strcmp(from, "CUSTOM"))
 		return;
-      custommirrorlist =  g_list_remove (custommirrorlist, (gconstpointer) old_text);
       path = gtk_tree_model_get_path (model, &iter);
       i = gtk_tree_path_get_indices (path)[0];
       gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
@@ -231,7 +204,8 @@ GtkWidget *mirrorview()
 	GtkListStore *store;
 	GtkTreeModel *model;
 	GtkTreeViewColumn *col;
-	GtkCellRenderer *renderer;		
+	GtkCellRenderer *renderer;
+	GtkWidget *view;		
 
 	store = gtk_list_store_new(3, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
@@ -248,7 +222,7 @@ GtkWidget *mirrorview()
 						     NULL);
 	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
   	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
-  	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
@@ -267,9 +241,9 @@ GtkWidget *mirrorview()
 	return view;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {	
-	GtkWidget *button, *view, *pScrollbar, *pSeparator, *doclabel;
+	GtkWidget *button, *pScrollbar, *pSeparator, *doclabel;
 	GtkTreeSelection *selection;
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
 	GtkWidget *pHBox = gtk_hbox_new(FALSE, 5);
@@ -284,27 +258,21 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
     	gtk_box_pack_start(GTK_BOX(pVBox), pSeparator, FALSE, FALSE, 0);
 	
 	// array of mirrors
-	view = mirrorview();
-	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
+	viewserver = mirrorview();
+	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewserver));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);      
         pScrollbar = gtk_scrolled_window_new(NULL, NULL);	
-	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), viewserver);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_box_pack_start(GTK_BOX(pVBox), pScrollbar, TRUE, TRUE, 0);
 	
-	pSeparator = gtk_hseparator_new();
-    	gtk_box_pack_start(GTK_BOX(pVBox), pSeparator, FALSE, FALSE, 0);
-
-	
-	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 10);
 	button = gtk_button_new_from_stock (GTK_STOCK_ADD );
-        g_signal_connect (button, "clicked",
-                        G_CALLBACK (add_mirror), view);
+        g_signal_connect (button, "clicked", G_CALLBACK (add_mirror), viewserver);
         gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);
 
         button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
-        g_signal_connect (button, "clicked",
-                        G_CALLBACK (remove_mirror), view);
+        g_signal_connect (button, "clicked", G_CALLBACK (remove_mirror), viewserver);
         gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);
 
 	return pVBox;
@@ -315,8 +283,9 @@ int prerun(GList **config)
 	GtkTreeIter iter;
 	char *fn;
 	int i;
+	gboolean checked;
 
-	switch(fwife_question("You need a net connexion (TODO : local version :p),\n do you want to configure your network?"))
+	switch(fwife_question("You need a net connexion running,\n do you want to configure your network?"))
 	{
 		case GTK_RESPONSE_YES:
 			fw_system_interactive("gnetconfig");
@@ -325,64 +294,62 @@ int prerun(GList **config)
 			break;
 	}
 	
-	fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
-	mirrorlist = getmirrors(fn);
-	FREE(fn);
-
-	if(mirrorlist)
+	if(mirrorlist == NULL)
 	{
-	for(i=0; i < g_list_length(mirrorlist); i+=3) 
-	{		
-		gboolean checked = FALSE;
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
+		fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
+		mirrorlist = getmirrors(fn);
+		FREE(fn);
+
+		for(i=0; i < g_list_length(mirrorlist); i+=3) 
+		{		
+			checked = FALSE;
+			if(!strcmp((char*)g_list_nth_data(mirrorlist, i+2), "On"))
+				checked = TRUE;
+			gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewserver))), &iter);
 		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter,
-			0, checked,1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
+			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewserver))), &iter,
+				0, checked,1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
 		
-	}
+		}
 	}
 	return 0;
 }
 
 int run(GList **config)
 {
-	int i, j;
-	char *fn;
+	char *fn, *name, *from;
+	gboolean toggled;
+	GList *newmirrorlist = NULL;
 	
 	fn = g_strdup_printf("%s/%s", PACCONFPATH, PACCONF);
 
-	for (i=0; i<g_list_length(mirrorlist); i++) {
-		if (!strcmp(g_list_nth_data(mirrorlist, i), "Off") ||
-				!strcmp(g_list_nth_data(mirrorlist, i), "On"))
-		{
-			mirrorlist = g_list_remove(mirrorlist, g_list_nth_data(mirrorlist, i));
-		}
-	}
-	// adds country info to the selected mirrors
-	// also removes the duplicate mirrors
-	for (i=0; i<g_list_length(mirrorlist); i+=2) {
-		for (j=0; j<g_list_length(newmirrorlist); j++) {
-			if (g_list_nth_data(mirrorlist, i) &&
-				!strcmp((char*)g_list_nth_data(mirrorlist, i), (char*)g_list_nth_data(newmirrorlist, j))) {
-				newmirrorlist = g_list_insert(newmirrorlist, g_list_nth_data(mirrorlist, i+1), j+1);
-				mirrorlist = g_list_remove(mirrorlist, g_list_nth_data(mirrorlist, i));
-				mirrorlist = g_list_remove(mirrorlist, g_list_nth_data(mirrorlist, i));
-			}
-		}
-	}
-	newmirrorlist = g_list_concat(newmirrorlist, mirrorlist);
+	GtkTreeIter iter;
+	GtkTreeView *treeview = (GtkTreeView *)viewserver;
+  	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
 
-	for(i=0; i < g_list_length(custommirrorlist); i++)
+	if(gtk_tree_model_get_iter_first (model, &iter) == FALSE)
 	{
-		newmirrorlist = g_list_prepend(newmirrorlist,"CUSTOM");
-		newmirrorlist = g_list_prepend(newmirrorlist,g_list_nth_data(custommirrorlist, i));
-		
+		return(0);
 	}
+	else
+	{
+		do
+		{
+			gtk_tree_model_get (model, &iter, COLUMN_USE, &toggled, COLUMN_NAME, &name, COLUMN_FROM, &from, -1);
+			if(toggled == TRUE)
+			{
+				newmirrorlist = g_list_prepend(newmirrorlist, strdup(from));
+				newmirrorlist = g_list_prepend(newmirrorlist, strdup(name));
+			}
+			else
+			{
+				newmirrorlist = g_list_append(newmirrorlist, strdup(name));
+				newmirrorlist = g_list_append(newmirrorlist, strdup(from));
+			}
+		} while(gtk_tree_model_iter_next(model, &iter));
+	}	
 
 	updateconfig(fn, newmirrorlist);
-
-	//g_list_free(custommirrorlist);
-	// g_list_free(mirrorlist);
 	FREE(fn); 
 	return(0);
 }

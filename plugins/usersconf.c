@@ -1,13 +1,22 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
-#include<string.h>
+#include <string.h>
 
 #include "common.h"
 #include "../util.h"
 
-GList *userslist=NULL;
 GtkWidget *rootpass, *rootverify;
 GtkWidget *userorigimg;
+
+enum
+{
+	COLUMN_USR_IMAGE,
+ 	COLUMN_USR_NAME,
+ 	COLUMN_USR_FULLNAME,
+ 	COLUMN_USR_SHELL,
+ 	COLUMN_USR_HOME,
+ 	COLUMN_USR_PASS
+};
 
 plugin_t plugin =
 {
@@ -32,29 +41,25 @@ plugin_t *info()
 	return &plugin;
 }
 
-int cmp_users(gconstpointer a, gconstpointer b)
-{
-	return(strcmp(a, b));
-}
-
 void remove_user (GtkWidget *widget, gpointer data)
 {
 	GtkTreeIter iter;
   	GtkTreeView *treeview = (GtkTreeView *)data;
   	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
   	GtkTreeSelection *selection = gtk_tree_view_get_selection (treeview);
-	char *old_name;
-
+	char *old_name, *ptr;
+	
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {
-  	  gtk_tree_model_get (model, &iter, 0, &old_name, -1);
-	  GList * elem = g_list_find_custom(userslist, (gconstpointer) old_name, cmp_users);
-    	  gint i = g_list_position(userslist, elem); 
-	  userslist =  g_list_delete_link (userslist, g_list_nth(userslist, i));
-	  userslist =  g_list_delete_link (userslist, g_list_nth(userslist, i));
-	  userslist =  g_list_delete_link (userslist, g_list_nth(userslist, i));
-	  userslist =  g_list_delete_link (userslist, g_list_nth(userslist, i));
-     	  gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
+		gtk_tree_model_get (model, &iter, COLUMN_USR_NAME, &old_name, -1);
+		ptr = g_strdup_printf("/usr/sbin/userdel %s", old_name);
+		if(fw_system(ptr) != 0)
+		{
+			fwife_error(_("A user can be deleted!"));
+		}
+		FREE(ptr);
+	  	
+     	  	gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
     	}
     return;
 }
@@ -62,8 +67,9 @@ void remove_user (GtkWidget *widget, gpointer data)
 void add_user (GtkWidget *widget, gpointer data)
 {
 	GtkWidget* pBoite;
-  	GtkWidget *pEntryPass, *pVerifyPass, *pEntryName, *pEntryHome, *pEntryShell;
-  	char* sName, *sPass, *sVerify, *sShell, *sHome;
+  	GtkWidget *pEntryPass, *pVerifyPass, *pEntryName, *pEntryHome, *pEntryShell, *pEntryFn;
+  	char* sName, *sFn, *sPass, *sVerify, *sShell, *sHome;
+	char* ptr = NULL;
 
 	GtkWidget *pVBox;
     	GtkWidget *pFrame;
@@ -91,7 +97,7 @@ void add_user (GtkWidget *widget, gpointer data)
    	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), pVBox, TRUE, FALSE, 5);	
 
     	/* Creation du premier GtkFrame */
-    	pFrame = gtk_frame_new("General Configuration");
+    	pFrame = gtk_frame_new(_("General Configuration"));
     gtk_box_pack_start(GTK_BOX(pVBox), pFrame, TRUE, FALSE, 0);
 
     /* Creation et insertion d une boite pour le premier GtkFrame */
@@ -99,13 +105,18 @@ void add_user (GtkWidget *widget, gpointer data)
     gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);   
 
     /* Creation et insertion des elements contenus dans le premier GtkFrame */
-    pLabel = gtk_label_new("Name :");
+    pLabel = gtk_label_new(_("Name :"));
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
     pEntryName = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryName, TRUE, FALSE, 0);
+    
+    pLabel = gtk_label_new(_("Full Name :"));
+    gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
+    pEntryFn = gtk_entry_new();
+    gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryFn, TRUE, FALSE, 0);
 
     /* Creation du deuxieme GtkFrame */
-    pFrame = gtk_frame_new("Password");
+    pFrame = gtk_frame_new(_("Password : "));
     gtk_box_pack_start(GTK_BOX(pVBox), pFrame, TRUE, FALSE, 0);
 
     /* Creation et insertion d une boite pour le deuxieme GtkFrame */
@@ -150,6 +161,7 @@ void add_user (GtkWidget *widget, gpointer data)
     {
         case GTK_RESPONSE_OK:
             sName = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryName));
+	    sFn = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryFn));
 	    sPass = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryPass));
 	    sVerify = (char*)gtk_entry_get_text(GTK_ENTRY(pVerifyPass));
 	    sShell = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryShell));
@@ -160,12 +172,41 @@ void add_user (GtkWidget *widget, gpointer data)
 		    fwife_error(_("Password verification incorrect"));
 		    return;
 	    }
-	    if(g_list_find_custom(userslist, (gconstpointer) sName, cmp_users) != NULL)
+	   
+	    //* Add user into the system *//
+	    if(!strlen(sShell) && !strlen(sHome))
+		    ptr = g_strdup_printf("/usr/sbin/useradd %s", sName);
+	    else if(!strlen(sShell))
+		    ptr = g_strdup_printf("/usr/sbin/useradd -d %s -m %s", sHome, sName);
+	    else if(!strlen(sHome))
+		    ptr = g_strdup_printf("/usr/sbin/useradd -s %s -m %s", sShell, sName);
+	    else
+		    ptr = g_strdup_printf("/usr/sbin/useradd -d %s -s %s -m %s", sHome, sShell, sName);
+	
+	    if(fw_system(ptr) != 0)
 	    {
+		    fwife_error(_("A user can be added! Verify existing name, lowercase name, and special characters"));
+		    FREE(ptr);
 		    gtk_widget_destroy(pBoite);
-		    fwife_error(_("A user get the same name"));
 		    return;
 	    }
+	    FREE(ptr);
+	   
+	    if(strlen(sPass))
+	    {
+		    ptr = g_strdup_printf("echo '%s:%s' |/usr/sbin/chpasswd", sName, sPass);
+		    fw_system(ptr);
+		    FREE(ptr);
+	    }
+	    
+	    if(strlen(sFn))
+	    {
+		    ptr = g_strdup_printf("chfn -f %s %s", sFn, sName);
+		    fw_system(ptr);
+		    FREE(ptr);
+	    }
+	    
+	    //* Adding new user to the list *//
             gtk_list_store_append (GTK_LIST_STORE (model), &iter);
 	    userimg = gtk_image_get_pixbuf (GTK_IMAGE(userorigimg));
 	    cellview = gtk_cell_view_new ();
@@ -174,16 +215,13 @@ void add_user (GtkWidget *widget, gpointer data)
 	    gtk_widget_destroy (cellview);
 	    if(!strcmp(sPass, ""))
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                     0, userimg, 1, sName, 2, sShell, 3, sHome, 4, NULL, -1);
+			COLUMN_USR_IMAGE, userimg, COLUMN_USR_NAME, sName, COLUMN_USR_FULLNAME, sFn, COLUMN_USR_SHELL, sShell, COLUMN_USR_HOME, sHome, COLUMN_USR_PASS, NULL, -1);
 	    else
 		gtk_list_store_set (GTK_LIST_STORE (model), &iter,
-                      0, userimg, 1, sName, 2, sShell, 3, sHome, 4, passimg, -1);
+				    COLUMN_USR_IMAGE, userimg, COLUMN_USR_NAME, sName, COLUMN_USR_FULLNAME, sFn, COLUMN_USR_SHELL, sShell, COLUMN_USR_HOME, sHome, COLUMN_USR_PASS, passimg, -1);
 	   g_object_unref (passimg);
 	   g_object_unref (userimg);
-	   userslist = g_list_append(userslist, strdup(sName));
-	   userslist = g_list_append(userslist, strdup(sShell));
-	   userslist = g_list_append(userslist, strdup(sHome));
-	   userslist = g_list_append(userslist, strdup(sPass));	
+	   
 	   gtk_widget_destroy(pBoite);
            break;
         case GTK_RESPONSE_CANCEL:
@@ -206,7 +244,7 @@ void verify_password(GtkWidget *widget, gpointer data)
 }
 		
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *hbox, *vboxp, *button, *info;	
 	//* For root entry end of page *//
@@ -229,7 +267,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	info = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(info), "<span face=\"Courier New\"><b>A litle bit help</b></span>\n");	
 
-	store = gtk_list_store_new(5, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);
 	
 	view = gtk_tree_view_new_with_model(model);
@@ -239,34 +277,41 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", 0, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_USR_IMAGE, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_NAME, NULL);
 	gtk_tree_view_column_set_title(col, "User");
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	
+	col = gtk_tree_view_column_new();
+	renderer = gtk_cell_renderer_text_new();
+	gtk_tree_view_column_pack_start(col, renderer, TRUE);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_FULLNAME, NULL);
+	gtk_tree_view_column_set_title(col, "Full Name");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_SHELL, NULL);
 	gtk_tree_view_column_set_title(col, "Shell");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 3, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_HOME, NULL);
 	gtk_tree_view_column_set_title(col, "Home");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, FALSE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", 4, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_USR_PASS, NULL);
 	gtk_tree_view_column_set_title(col, "Password");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
@@ -322,46 +367,17 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 
 int run(GList **config)
 {
-	int i = 0;
-	char *user, *shell, *home, *pass, *ptr;
-	for(i=0; i<g_list_length(userslist); i+=4)
+	char *ptr = NULL, *pass;
+	
+	//* Set root password *//
+	pass = strdup((char*)gtk_entry_get_text(GTK_ENTRY(rootpass)));
+	if(strlen(pass))
 	{
-		user = (char*)g_list_nth_data(userslist, i);
-		shell = (char*)g_list_nth_data(userslist, i+1);
-		home = (char*)g_list_nth_data(userslist, i+2);
-		pass = (char*)g_list_nth_data(userslist, i+3);
-		if(strlen(pass))
-		{
-			if(!strlen(shell) && !strlen(home))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -p%s %s", pass, user);
-			else if(!strlen(shell))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -p%s -m %s", home, pass, user);
-			else if(!strlen(home))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -s %s -p%s -m %s", shell, pass, user);
-			else
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -s %s -p%s -m %s", home, shell, pass, user);
-		}
-		else
-		{
-			if(!strlen(shell) && !strlen(home))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd %s", user);
-			else if(!strlen(shell))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -m %s", home, user);
-			else if(!strlen(home))
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -s %s -m %s", shell, user);
-			else
-				ptr = g_strdup_printf("chroot ./ /usr/sbin/useradd -d %s -s %s -m %s", home, shell, user);
-		}
-		if(fw_system(ptr) != 0)
-			fwife_error(_("A user can be added"));
-		FREE(ptr);		
+		ptr = g_strdup_printf("echo '%s:%s' |/usr/sbin/chpasswd", "root", pass);
+		fw_system(ptr);
+		FREE(ptr);
 	}
-		
-	pass = (char*)gtk_entry_get_text(GTK_ENTRY(rootpass));
-	if(!strcmp(pass, ""))
-		ptr = g_strdup_printf("echo %s:%s |chroot ./ /usr/sbin/chpasswd", "root", pass);
-	fw_system(ptr);
-	FREE(ptr);	
+	FREE(pass);
 	return 0;
 }
  

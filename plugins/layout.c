@@ -93,7 +93,7 @@ void selection_changed(GtkTreeSelection *selection, gpointer data)
 		
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	int i;
 	GtkListStore *store;
@@ -138,10 +138,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
       
-        g_signal_connect (selection,
-	  		  "changed",
-			  G_CALLBACK (selection_changed),
-			  (gpointer) assist);
+        g_signal_connect (selection, "changed", G_CALLBACK (selection_changed),NULL);
 	
 	pScrollbar = gtk_scrolled_window_new(NULL, NULL);
 	

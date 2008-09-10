@@ -2,28 +2,34 @@
 
 Fwife 0.1 alpha
 
-Warning : Alpha version - Core works but plugins aren't finished. Many bugs and memory leaks are maybe possible.
+Warning : Alpha version - Core works but plugins aren't finished. Many bugs, segfaults and memory leaks are possible.
 
-This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for a livecd. I will see after for a local version Any suggestion and patchs are welcome.
+This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for fwlive. I will see after for a local version. Any suggestion and patchs are welcome.
 
 Knows Bugs : 
 
-Core : -> Translation
+Select plugin : -> graphical bug with packet description label when description too long.
 
-Select plugin : -> graphical bug with packet description label when description too long
+Partdisk : -> Formatting was disable (testing)
+
+Install plugin : -> Using libpacman doesn't work.
 
 
 TODO :
 
 Core:  -> Select language before loading gtk plugins (have a correct translation)
-       -> and many other things
+       -> Add a help button for each plugin.
 
 Configsource plugin : -> Replace stock buttons
 
 Partdisk plugin : -> improve dialog box interface
 	          -> add a button for launch gparted (and refresh part list after)
+		  -> add raid support
 
-select plugin : -> add a basic mode (expert mode supported)
+Select plugin : -> add a basic mode (expert mode supported)
 		-> improve interface ?
 
-install plugin and next : -> i'm working on them
+Timeconf plugin : -> draw common places on map ( places's coordinates are in the Glist)
+
+
+Finish plugin : -> Remove dialogboxs, add interface?

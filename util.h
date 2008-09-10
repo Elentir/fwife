@@ -55,5 +55,6 @@ void signal_handler(int signum);
 int setup_log(char *file, int line, char *fmt, ...);
 void cb_log(unsigned short level, char *msg);
 char *fsize(int length);
+int cmp_str(gconstpointer a, gconstpointer b);
 
 #endif

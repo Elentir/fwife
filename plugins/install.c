@@ -36,7 +36,7 @@ plugin_t *info()
 	return &plugin;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *vbox;
 	vbox = gtk_vbox_new (FALSE, 5);
@@ -167,7 +167,7 @@ int installpkgs(GList *pkgs, GList **config)
 	char *ptr;
 	
 	pacman_release();
-	if(pacman_initialize("/") == -1) {
+	if(pacman_initialize(TARGETDIR) == -1) {
 		printf("failed to initialize pacman library (%s)\n", pacman_strerror(pm_errno));
 	}
 
@@ -258,6 +258,18 @@ int installpkgsnormal(GList *pkgs)
 
 int prerun(GList **config)
 {
+	char *ptr;
+	//mount sytem point to chdir
+	ptr = g_strdup_printf("umount %s/proc", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("umount %s/dev", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("umount %s/sys", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+
 	copyfile("/proc/mounts", "/etc/mtab");
 
 	installpkgsnormal((GList*)data_get(*config, "packages"));
@@ -268,6 +280,19 @@ int prerun(GList **config)
 
 int run(GList **config)
 {
+	char *ptr;
+	//mount sytem point to chdir
+	ptr = g_strdup_printf("mount /dev -o bind %s/dev", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("mount /proc -o bind %s/proc", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("mount /sys -o bind %s/sys", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	//Begin configuration, chroot at targetdir
+	chroot(TARGETDIR);
 	return 0;
 }
  

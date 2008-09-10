@@ -34,7 +34,7 @@ typedef struct
 	char *name;
 	char* (*desc)();
 	int priority;
-	GtkWidget* (*load_gtk_widget)(GtkWidget *assistant);
+	GtkWidget* (*load_gtk_widget)();
 	GtkAssistantPageType type;
     	gboolean complete;
 	int (*prerun)(GList **config);

@@ -564,7 +564,7 @@ GtkWidget *getcategorieslist()
 	return pScrollbar;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *hsepa1, *hsepa2, *info;
 	GtkWidget *image;

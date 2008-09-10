@@ -28,7 +28,7 @@ plugin_t *info()
 	return &plugin;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *widget = gtk_label_new (NULL);
 	gtk_label_set_markup(GTK_LABEL(widget), _("<span face=\"Times New Roman 12\"><b>Welcome among the users of Frugalware!\n\n</b></span>\n"

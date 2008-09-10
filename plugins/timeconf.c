@@ -28,6 +28,13 @@ char *name;
 char *desc;
 } zonetime_t;
 
+enum
+{
+	COLUMN_TIME_CODE,
+ 	COLUMN_TIME_NAME,
+ 	COLUMN_TIME_COMMENT
+};
+
 
 plugin_t plugin =
 {
@@ -168,7 +175,7 @@ int fwifetime_find()
     return EXIT_SUCCESS;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkListStore *store;
 	GtkTreeModel *model;
@@ -194,21 +201,21 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_TIME_CODE, NULL);
 	gtk_tree_view_column_set_title(col, "CODE");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_TIME_NAME, NULL);
 	gtk_tree_view_column_set_title(col, "Name");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_TIME_COMMENT, NULL);
 	gtk_tree_view_column_set_title(col, "Comments");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 
@@ -226,8 +233,7 @@ int prerun(GList **config)
 {
 	int i;
 	GtkTreeIter iter;
-	fwifetime_find();
-
+	
 	char *ptr = select_mode();
 	if(ptr)
 		fwtime_hwclockconf(CLOCKFILE, ptr);
@@ -235,12 +241,15 @@ int prerun(GList **config)
 	//* Add zones to the list *//
 	if(zonetime)
 	{
+		// search zones
+		fwifetime_find();
+		// add them to the list
 		for(i=0; i < g_list_length(zonetime); i+=4) 
 		{		
 			gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &iter);
 			
 			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &iter,
-				0, (char*)g_list_nth_data(zonetime, i), 1, (char*)g_list_nth_data(zonetime, i+2), 2, (char*)g_list_nth_data(zonetime, i+3), -1);	
+				COLUMN_TIME_CODE, (char*)g_list_nth_data(zonetime, i), COLUMN_TIME_NAME, (char*)g_list_nth_data(zonetime, i+2), COLUMN_TIME_COMMENT, (char*)g_list_nth_data(zonetime, i+3), -1);	
 		
 		}
 	}
@@ -256,7 +265,7 @@ int run(GList **config)
 
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {
-  	  gtk_tree_model_get (model, &iter, 1, &ret, -1);
+  	  gtk_tree_model_get (model, &iter, COLUMN_TIME_NAME, &ret, -1);
 	  if(ret)
 		ptr = g_strdup_printf("/usr/share/zoneinfo/%s", ret);
 		symlink(ptr, ZONEFILE);

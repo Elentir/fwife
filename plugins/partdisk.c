@@ -222,7 +222,7 @@ int detect_parts(int noswap)
 		disk = ped_disk_new(dev);
 		if(disk)
 		{
-			if (allparts)
+			if (allparts != NULL)
 				g_list_free(allparts);
 			listparts(disk, noswap);
 			data_put(&allparts, dev->path, parts);
@@ -776,7 +776,7 @@ void change_part_list(GtkComboBox *combo, gpointer view)
 }
 
 //* Load gtk widget for this plugin *//
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *pVBox, *pHBox, *info;
 	GtkWidget *diskinfo, *device, *separatorh1;	

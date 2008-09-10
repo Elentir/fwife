@@ -420,3 +420,8 @@ char *fsize(int length)
 	else
 		return g_strdup_printf("%d GB", length/1953125);
 }
+
+int cmp_str(gconstpointer a, gconstpointer b)
+{
+	return(strcmp(a, b));
+}

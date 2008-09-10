@@ -38,7 +38,7 @@ plugin_t *info()
 	return &plugin;
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	/* Creation de la zone de saisie */
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
@@ -78,7 +78,7 @@ int run(GList **config)
 	const char *sLabel;
 	int mode, needrelease;
 	FILE *fp;
-	struct stat buf;
+	struct stat buf;	
 	
 	/* get button list */
     	pList = gtk_radio_button_get_group(GTK_RADIO_BUTTON(pRadio1));

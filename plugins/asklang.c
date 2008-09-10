@@ -75,7 +75,7 @@ int setcharset(char *name, GList **config)
 	return(0);
 }
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	int i;
 	GtkListStore *store;

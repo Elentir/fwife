@@ -114,7 +114,7 @@ void close_install(GtkWidget *w, gpointer user_data)
    GtkWidget *dialog, *label;
 
    dialog = gtk_dialog_new_with_buttons(_("Installation completed"),
-                                        NULL,
+                                        GTK_WINDOW(assistant),
                                         GTK_DIALOG_MODAL,
                                         GTK_STOCK_OK,
                                         GTK_RESPONSE_ACCEPT,
@@ -153,6 +153,11 @@ int plugin_next(GtkWidget *w, gpointer user_data)
 int plugin_previous(GtkWidget *w, gpointer user_data)
 {
 	plugin_active = g_list_nth_data(plugin_list, g_list_index(plugin_list, (gconstpointer)plugin_active)-1);
+
+	// prerun
+	if(plugin_active->prerun)
+        	plugin_active->prerun(&config);
+
 	return 0;
 }
 
@@ -215,7 +220,7 @@ int main (int argc, char *argv[])
 
       pages[i] = (PageInfo) {NULL, -1, GET_UTF8(plugin->desc()), plugin->type, plugin->complete};
 
-      if ((pages[i].widget = plugin->load_gtk_widget(assistant)) == NULL)
+      if ((pages[i].widget = plugin->load_gtk_widget()) == NULL)
        { LOG("Error when loading plugin's widget @ %s\n", plugin->name); }
 
       pages[i].index = gtk_assistant_append_page (GTK_ASSISTANT (assistant), pages[i].widget);

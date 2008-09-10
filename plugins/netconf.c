@@ -53,11 +53,6 @@ plugin_t *info()
 	return &plugin;
 }
 
-int cmp_str(gconstpointer a, gconstpointer b)
-{
-	return(strcmp(a, b));
-}
-
 void change_interface(GtkComboBox *combo, gpointer labelinfo)
 {
 	char *selected;
@@ -403,7 +398,7 @@ void del_interface(GtkWidget *button, gpointer data)
 }
 
 
-GtkWidget *load_gtk_widget(GtkWidget *assist)
+GtkWidget *load_gtk_widget()
 {
 	GtkWidget *pVBox, *pFrame, *pHBoxFrame, *pVBoxFrame, *phboxtemp, *labeltemp;
 	GtkWidget *hboxview;
@@ -419,7 +414,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
 						
-	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);
 	
 	viewif = gtk_tree_view_new_with_model(model);
@@ -508,13 +503,13 @@ int prerun(GList **config)
 	int i;
 	fwutil_i18ninit(__FILE__);
 	if(iflist == NULL)
+	{
 		iflist = fwnet_iflist();
 
-	chdir(TARGETDIR);
-	
-	for(i=0; i<g_list_length(iflist); i+=2)
-	{
-		gtk_combo_box_append_text(GTK_COMBO_BOX(intercombo), (char*)g_list_nth_data(iflist, i));
+		for(i=0; i<g_list_length(iflist); i+=2)
+		{
+			gtk_combo_box_append_text(GTK_COMBO_BOX(intercombo), (char*)g_list_nth_data(iflist, i));
+		}
 	}
 	
 	gtk_combo_box_set_active (GTK_COMBO_BOX (intercombo), 0);
@@ -526,7 +521,7 @@ int run(GList **config)
 {
 	fwnet_profile_t *newprofile=NULL;
 	int i;	
-
+	chroot(TARGETDIR);
 	if((newprofile = (fwnet_profile_t*)malloc(sizeof(fwnet_profile_t))) == NULL)
 		return(1);
 	memset(newprofile, 0, sizeof(fwnet_profile_t));
@@ -537,7 +532,6 @@ int run(GList **config)
 		newprofile->interfaces = g_list_append(newprofile->interfaces, (fwnet_interface_t *) g_list_nth_data(interfaceslist, i));
 	}
 	char *host = fwife_entry("Hostname", "Enter computer hostname :", NULL);
-	chdir(TARGETDIR);
 	fwnet_writeconfig(newprofile, host);
 	FREE(host);
 	return 0;

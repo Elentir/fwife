@@ -10,8 +10,6 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-Partdisk : -> Formatting was disable (testing)
-
 Install plugin : -> Using libpacman doesn't work.
 
 

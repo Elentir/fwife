@@ -372,7 +372,7 @@ int mountdev(char *dev, char *mountpoint, gboolean isswap, GList **config)
 int mkfss(char *dev, char *fs, gboolean checked)
 {
 	char *opts=NULL;
-	// TOFIX : Memory leak, need free opts
+	// TOFIX : Memory leaks
 	if(checked == TRUE)
 		opts = strdup("-c");
 	else
@@ -381,7 +381,7 @@ int mkfss(char *dev, char *fs, gboolean checked)
 	umount(findmount(dev, 1));
 	if(!strcmp(fs, "ext2"))
 		return(fw_system(g_strdup_printf("mke2fs %s %s", opts, dev)));
-	else if(!strcmp(fs, "ext3"))
+	else if(!strcmp(fs, "ext3 - Journalistic version of ext2"))
 		return(fw_system(g_strdup_printf("mke2fs -j %s %s", opts, dev)));
 	else if(!strcmp(fs, "reiserfs"))
 		return(fw_system(g_strdup_printf("echo y |mkreiserfs %s", dev)));
@@ -508,8 +508,7 @@ int requestformat(char *namedev)
 {
 	
 	GSList *pList;
-   	const gchar *sLabel;
-	gboolean checked;
+   	char *sLabel;
 	extern GtkWidget *assistant;
 	
 	GtkWidget* pBoite = gtk_dialog_new_with_buttons("Do you want to format partition?",
@@ -555,10 +554,10 @@ int requestformat(char *namedev)
 	gtk_box_pack_start (GTK_BOX (pVBox), separator, FALSE, FALSE, 5);
 	
 	GtkWidget *pLabel2 = gtk_label_new("Options :");
-	gtk_box_pack_start(GTK_BOX(pVBox), pLabel2, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pLabel2, FALSE, FALSE, 5);
 	
 	GtkWidget *check = gtk_check_button_new_with_label("formatting check - slowly");
-	gtk_box_pack_start(GTK_BOX (pVBox), check, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX (pVBox), check, FALSE, FALSE, 5);
 	
 	/* Show vbox  */
 	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
@@ -579,7 +578,7 @@ int requestformat(char *namedev)
       			if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pList->data)))
        			{
             		/* get button label */
-            		sLabel = gtk_button_get_label(GTK_BUTTON(pList->data));
+            		sLabel = strdup((char*)gtk_button_get_label(GTK_BUTTON(pList->data)));
             		/* Get out */			
             		pList = NULL;
         		}
@@ -589,10 +588,16 @@ int requestformat(char *namedev)
             		pList = g_slist_next(pList);
         		}
     		}
-
-		checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
-		
-		//mkfss(namedev, sLabel, checked);
+		if(!strcmp(sLabel, "noformat - keep filesystem"))
+		{
+			gtk_widget_destroy(pBoite);
+			return 0;
+		}
+		else
+		{
+			gboolean checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+			mkfss(namedev, sLabel, checked);
+		}
 		break;
 		/* Exit */
 		case GTK_RESPONSE_CANCEL:
@@ -637,8 +642,7 @@ int swapformat(char *namedev)
 	{
 		/* L utilisateur valide */
 		case GTK_RESPONSE_OK:
-			// TODO : Reactivating real formatting
-			//mkfss(namedev, "swap", 0);
+			mkfss(namedev, "swap", FALSE);
 			break;
 			/* L utilisateur annule */
 		case GTK_RESPONSE_CANCEL:

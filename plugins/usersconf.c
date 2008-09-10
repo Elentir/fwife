@@ -26,6 +26,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
+ 	NULL,
 	NULL,
 	run,
 	NULL // dlopen handle

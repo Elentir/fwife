@@ -31,8 +31,8 @@ LDFLAGS += -L../libfwmouseconfig -lfwmouseconfig
 CFLAGS += -I../libfwxconfig
 LDFLAGS += -L../libfwxconfig -lfwxconfig
 
-PLUGINS=greet configsource asklang layout install select partdisk timeconf grubconf usersconf timeconf netconf finish
-#PLUGINS=greet configsource finish
+#PLUGINS=greet configsource asklang layout install select partdisk timeconf grubconf usersconf timeconf netconf finish
+PLUGINS=greet timeconf netconf finish
 
 all: $(addsuffix .so,$(PLUGINS))
 

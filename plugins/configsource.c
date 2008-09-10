@@ -27,6 +27,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
+ 	NULL,
 	prerun,
 	run,
 	NULL // dlopen handle
@@ -131,6 +132,7 @@ static void fixed_toggled (GtkCellRendererToggle *cell,
 
 void add_mirror (GtkWidget *button, gpointer data)
 {
+  extern GtkWidget *assistant;
   GtkTreeIter iter;
   GtkTreeView *treeview = (GtkTreeView *)data;
   GtkTreeModel *model = gtk_tree_view_get_model (treeview);
@@ -140,11 +142,12 @@ void add_mirror (GtkWidget *button, gpointer data)
   const gchar* sName;
 
   pBoite = gtk_dialog_new_with_buttons(_("Add a personalized server"),
-        NULL,
+        GTK_WINDOW(assistant),
         GTK_DIALOG_MODAL,
         GTK_STOCK_OK,GTK_RESPONSE_OK,
         GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,
         NULL);
+  gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
 
     pEntry = gtk_entry_new();
     label = gtk_label_new(_("Enter here the address of the server you want to add!\n This can be a local server or a distant one!")); 

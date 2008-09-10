@@ -7,5 +7,6 @@
 plugin_t *info();
 int prerun(GList **config);
 int run(GList **config);
+GtkWidget* load_help_widget();
 GtkWidget* load_gtk_widget();
 char *desc();

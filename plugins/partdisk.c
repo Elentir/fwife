@@ -52,6 +52,7 @@ plugin_t plugin =
 	load_gtk_widget,
  	GTK_ASSISTANT_PAGE_CONTENT,
  	FALSE,
+	NULL,
   	prerun,
 	run,
 	NULL // dlopen handle
@@ -368,11 +369,14 @@ int mountdev(char *dev, char *mountpoint, gboolean isswap, GList **config)
 	return(0);
 }
 
-int mkfss(char *dev, char *fs, int check)
+int mkfss(char *dev, char *fs, gboolean checked)
 {
 	char *opts=NULL;
-
-	opts = strdup(check ? "-c" : "");
+	// TOFIX : Memory leak, need free opts
+	if(checked == TRUE)
+		opts = strdup("-c");
+	else
+		opts = strdup("");
 
 	umount(findmount(dev, 1));
 	if(!strcmp(fs, "ext2"))
@@ -388,12 +392,12 @@ int mkfss(char *dev, char *fs, int check)
 	else if(!strcmp(fs, "swap"))
 	{
 		fw_system(g_strdup_printf("%s %s %s", MKSWAP, opts, dev));
-		fw_system(g_strdup_printf("%s %s", SWAPON, dev));
+		fw_system(g_strdup_printf("%s %s", SWAPON, dev));		
 		return(0);
 	}
 		
 	// never reached
-	return(1);
+	return(-1);
 }
 
 //* A cell has been edited *//
@@ -505,6 +509,7 @@ int requestformat(char *namedev)
 	
 	GSList *pList;
    	const gchar *sLabel;
+	gboolean checked;
 	extern GtkWidget *assistant;
 	
 	GtkWidget* pBoite = gtk_dialog_new_with_buttons("Do you want to format partition?",
@@ -575,19 +580,21 @@ int requestformat(char *namedev)
        			{
             		/* get button label */
             		sLabel = gtk_button_get_label(GTK_BUTTON(pList->data));
-            		/* Get out */
-			
+            		/* Get out */			
             		pList = NULL;
         		}
         		else
         		{
-            		/* NON -> on passe au bouton suivant */
+            		/* next button */
             		pList = g_slist_next(pList);
         		}
     		}
-			//mkfss(namedev, sLabel, check);
-			break;
-			/* Exit */
+
+		checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+		
+		//mkfss(namedev, sLabel, checked);
+		break;
+		/* Exit */
 		case GTK_RESPONSE_CANCEL:
 		case GTK_RESPONSE_NONE:
 		default:

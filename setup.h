@@ -37,6 +37,7 @@ typedef struct
 	GtkWidget* (*load_gtk_widget)();
 	GtkAssistantPageType type;
     	gboolean complete;
+	GtkWidget* (*load_help_widget)();
 	int (*prerun)(GList **config);
 	int (*run)(GList **config);
 	void *handle;

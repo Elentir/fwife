@@ -14,6 +14,7 @@ plugin_t plugin =
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
 	NULL,
+	NULL,
 	run,
 	NULL // dlopen handle
 };

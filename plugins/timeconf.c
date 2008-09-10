@@ -20,14 +20,6 @@ GtkWidget *timeview;
 
 GList *zonetime = NULL;
 
-typedef struct
-{
-char *code;
-char *coord;
-char *name;
-char *desc;
-} zonetime_t;
-
 enum
 {
 	COLUMN_TIME_CODE,
@@ -44,6 +36,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
+	NULL,
 	prerun,
 	run,
 	NULL // dlopen handle
@@ -239,7 +232,7 @@ int prerun(GList **config)
 		fwtime_hwclockconf(CLOCKFILE, ptr);
 		
 	//* Add zones to the list *//
-	if(zonetime)
+	if(zonetime == NULL)
 	{
 		// search zones
 		fwifetime_find();

@@ -161,6 +161,37 @@ int plugin_previous(GtkWidget *w, gpointer user_data)
 	return 0;
 }
 
+//* Load next plugin *//
+int show_help(GtkWidget *w, gpointer user_data)
+{
+	if((plugin_active->load_help_widget) != NULL)
+	{
+	
+		GtkWidget *helpwidget = plugin_active->load_help_widget();
+		char *title = g_strdup_printf("Help for plugin %s", plugin_active->name);
+		GtkWidget *pBoite = gtk_dialog_new_with_buttons(title,
+        				GTK_WINDOW(assistant),
+        				GTK_DIALOG_MODAL,
+        				GTK_STOCK_OK,GTK_RESPONSE_OK,
+        				NULL);
+
+		gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), helpwidget, TRUE, TRUE, 5);
+
+    		gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
+
+    		gtk_dialog_run(GTK_DIALOG(pBoite));
+		gtk_widget_destroy(pBoite);
+		FREE(title);
+    		
+    	}
+	else
+	{
+		fwife_error("No help available for this plugin");
+	}
+    	
+	return 0;
+}
+
 int main (int argc, char *argv[])
 {
   int i;
@@ -184,6 +215,12 @@ int main (int argc, char *argv[])
   g_signal_connect(G_OBJECT(((GtkAssistant *) assistant)->forward), "clicked", G_CALLBACK(plugin_next), NULL);
   g_signal_connect(G_OBJECT(((GtkAssistant *) assistant)->back), "clicked", G_CALLBACK(plugin_previous), NULL);
 
+  // Remove useless button and add usefull one
+  gtk_assistant_remove_action_widget(GTK_ASSISTANT(assistant), (GtkWidget*)(((GtkAssistant *) assistant)->last));
+  GtkWidget *help = gtk_button_new_from_stock(GTK_STOCK_HELP);
+  gtk_widget_show(help);
+  g_signal_connect (G_OBJECT (help), "clicked", G_CALLBACK (show_help), NULL);
+  gtk_assistant_add_action_widget(GTK_ASSISTANT(assistant), help);
   /* Load a nice image */
   GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file ("images/headlogo.png", &gerror);
   if(!pixbuf) {

@@ -161,13 +161,12 @@ void progress_event (unsigned char event, void *data1, void *data2)
 	return;
 }
 
-int installpkgs(GList *pkgs, GList **config)
+int installpkgs(GList *pkgs)
 {
 	int i = 0;
 	PM_LIST *pdata = NULL, *pkgsl;	
 	char *ptr;
 	
-	pacman_release();
 	if(pacman_initialize(TARGETDIR) == -1) {
 		printf("failed to initialize pacman library (%s)\n", pacman_strerror(pm_errno));
 	}
@@ -187,8 +186,8 @@ int installpkgs(GList *pkgs, GList **config)
 	if(db_local == NULL) {
 		printf("could not register 'local' database (%s)\n", pacman_strerror(pm_errno));
 	}
-
-	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, PM_TRANS_FLAG_FORCE|PM_TRANS_FLAG_NOINTEGRITY, progress_event, NULL, progress_install) == -1)
+	
+	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, PM_TRANS_FLAG_FORCE|PM_TRANS_FLAG_NODEPS, progress_event, NULL, progress_install) == -1)
 		printf("Failed to initialize transaction %s\n", pacman_strerror (pm_errno));	
 	
 	for (i = 0; i<g_list_length(pkgs); i++)
@@ -273,7 +272,7 @@ int prerun(GList **config)
 
 	copyfile("/proc/mounts", "/etc/mtab");
 
-	installpkgsnormal((GList*)data_get(*config, "packages"));
+	installpkgs((GList*)data_get(*config, "packages"));
 	
 	set_page_completed();
 	return(0);

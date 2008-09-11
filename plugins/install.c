@@ -272,7 +272,7 @@ int prerun(GList **config)
 
 	copyfile("/proc/mounts", "/etc/mtab");
 
-	installpkgs((GList*)data_get(*config, "packages"));
+	installpkgsoldschool((GList*)data_get(*config, "packages"));
 	
 	set_page_completed();
 	return(0);

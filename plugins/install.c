@@ -226,7 +226,7 @@ int installpkgs(GList *pkgs)
 	return 0;	
 }
 
-int installpkgsnormal(GList *pkgs)
+int installpkgsoldschool(GList *pkgs)
 {
 	float percent = 0.0;
 	int i;

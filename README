@@ -10,24 +10,21 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-Install plugin : -> Using libpacman doesn't work.
+Install plugin : -> Using libpacman doesn't work. (segfault). Currently, using pacman-g2!
 
 
 TODO :
 
-Core:  -> Select language before loading gtk plugins (have a correct translation)
-       -> Add a help button for each plugin.
+Plugins : -> Make help widget for each plugin
 
-Configsource plugin : -> Replace stock buttons
+Core:  -> Select language before loading gtk plugins (have a correct translation)
 
 Partdisk plugin : -> improve dialog box interface
 	          -> add a button for launch gparted (and refresh part list after)
 		  -> add raid support
 
-Select plugin : -> add a basic mode (expert mode supported)
-		-> improve interface ?
+Select plugin : -> add a basic mode (expert mode supported)		
 
 Timeconf plugin : -> draw common places on map ( places's coordinates are in the Glist)
-
 
 Finish plugin : -> Remove dialogboxs, add interface?

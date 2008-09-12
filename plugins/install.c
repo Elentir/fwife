@@ -226,7 +226,7 @@ int installpkgs(GList *pkgs)
 	return 0;	
 }
 
-int installpkgsoldschool(GList *pkgs)
+int installpkgsnormal(GList *pkgs)
 {
 	float percent = 0.0;
 	int i;
@@ -259,7 +259,7 @@ int installpkgsoldschool(GList *pkgs)
 int prerun(GList **config)
 {
 	char *ptr;
-	//mount sytem point to chdir
+	//umount if mounted
 	ptr = g_strdup_printf("umount %s/proc", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
@@ -272,7 +272,7 @@ int prerun(GList **config)
 
 	copyfile("/proc/mounts", "/etc/mtab");
 
-	installpkgsoldschool((GList*)data_get(*config, "packages"));
+	installpkgs((GList*)data_get(*config, "packages"));
 	
 	set_page_completed();
 	return(0);
@@ -281,7 +281,7 @@ int prerun(GList **config)
 int run(GList **config)
 {
 	char *ptr;
-	//mount sytem point to chdir
+	//mount system point to targetdir
 	ptr = g_strdup_printf("mount /dev -o bind %s/dev", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
@@ -291,7 +291,7 @@ int run(GList **config)
 	ptr = g_strdup_printf("mount /sys -o bind %s/sys", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
-	//Begin configuration, chroot at targetdir
+	//Begin configuration part, chroot at targetdir
 	chroot(TARGETDIR);
 	return 0;
 }

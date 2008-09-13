@@ -1,5 +1,5 @@
 /*
- *  netconf.c for Fwife setup
+ *  netconf.c for Fwife
  * 
  *  Copyright (c) 2008 by Albar Boris <boris.a@cegetel.net>
  * 

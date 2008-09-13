@@ -1,5 +1,5 @@
 /*
- *  configsource.c for Fwife setup
+ *  configsource.c for Fwife
  * 
  *  Copyright (c) 2005 by Miklos Vajna <vmiklos@frugalware.org>
  *  Copyright (c) 2008 by Albar Boris <boris.a@cegetel.net>

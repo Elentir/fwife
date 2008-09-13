@@ -1,5 +1,5 @@
 /*
- *  util.c for Fwife setup
+ *  util.c for Fwife
  * 
  *  Copyright (c) 2005-2007 by Miklos Vajna <vmiklos@frugalware.org>
  *  Copyright (c) 2006 by Alex Smith <alex@alex-smith.me.uk>

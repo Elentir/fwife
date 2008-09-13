@@ -1,5 +1,5 @@
 /*
- *  timeconf.c for Fwife setup
+ *  timeconf.c for Fwife
  * 
  *  Copyright (c) 2008 by Albar Boris <boris.a@cegetel.net>
  * 

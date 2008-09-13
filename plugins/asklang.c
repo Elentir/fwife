@@ -1,5 +1,5 @@
 /*
- *  asklang.c for Fwife setup
+ *  asklang.c for Fwife
  * 
  *  Copyright (c) 2005, 2007, 2008 by Miklos Vajna <vmiklos@frugalware.org>
  *  Copyright (c) 2005 by Christian Hamar alias krix <krics@linuxforum.hu>

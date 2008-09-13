@@ -1,5 +1,5 @@
 /*
- *  greet.c for Fwife setup
+ *  greet.c for Fwife
  * 
  *  Copyright (c) 2008 by Albar Boris <boris.a@cegetel.net>
  * 

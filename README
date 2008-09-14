@@ -26,6 +26,4 @@ Partdisk plugin : -> improve dialog box interface
 
 Select plugin : -> add a basic mode (expert mode supported)		
 
-Timeconf plugin : -> draw common places on map ( places's coordinates are in the Glist)
-
 Finish plugin : -> Remove dialogboxs, add interface?

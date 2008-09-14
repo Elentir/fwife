@@ -45,7 +45,7 @@ plugin_t plugin =
 {
 	"configsource",	
 	desc,
-	10,
+	20,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,

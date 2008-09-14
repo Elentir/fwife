@@ -40,6 +40,7 @@
 GtkWidget *drawingmap;
 GdkPixbuf *image=NULL;
 GtkWidget *timeview;
+GtkWidget *UTC;
 
 GList *zonetime = NULL;
 
@@ -72,78 +73,6 @@ char *desc()
 plugin_t *info()
 {
 	return &plugin;
-}
-
-char* select_mode()
-{
-	char *modes[] = 
-	{
-		"localtime", _("Hardware clock is set to local time"),
-		"UTC", _("Hardware clock is set to UTC/GMT")
-	};
-	
-	GtkWidget *combo;
-	GtkTreeIter iter;
-	GtkListStore *store;
-	gint i;
-	char *ptr;
-
-	extern GtkWidget *assistant;
-	GtkTreeModel *model;
-
-	store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
-	combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
-	g_object_unref (GTK_TREE_MODEL (store));
-	gtk_widget_set_size_request(combo, 350, 40);
-	    
-	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
-	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
-	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 0, NULL);
-    
-	renderer = gtk_cell_renderer_text_new();
-	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
-	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 1, NULL);
-	
-
-	for (i = 0; i < 4; i+=2)
-	{
-		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, modes[i], 1, modes[i+1], -1);
-	}	
-
-	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Time mode configuration",
-        				GTK_WINDOW(assistant),
-        				GTK_DIALOG_MODAL,
-        				GTK_STOCK_OK,GTK_RESPONSE_OK,
-        				NULL);
-	
-	GtkWidget *label = gtk_label_new("Select UTC or local");
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), label, FALSE, FALSE, 5);
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), combo, TRUE, FALSE, 10);	
-	gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
-	
-
-    	/* Affichage des elements de la boite de dialogue */
-    	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
-
-   	/* On lance la boite de dialogue et on recupere la reponse */
-    	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
-    	{
-        	case GTK_RESPONSE_OK:
-	
-		gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter);
-		model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
-		gtk_tree_model_get (model, &iter, 0, &ptr, -1);
-		break;
-
-        	case GTK_RESPONSE_CANCEL:
-        	case GTK_RESPONSE_NONE:
-        	default: 
-            		ptr = NULL;
-			break;
-    	}
-	gtk_widget_destroy(pBoite);
-	return ptr;
 }
 
 void parselatlong(char *latlong, float *latdec, float *longdec)
@@ -462,7 +391,10 @@ GtkWidget *load_gtk_widget()
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), timeview);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-	gtk_box_pack_start(GTK_BOX(pVbox), pScrollbar, TRUE, TRUE, 0);	
+	gtk_box_pack_start(GTK_BOX(pVbox), pScrollbar, TRUE, TRUE, 0);
+
+	UTC = gtk_check_button_new_with_label("Use UTC/GMT time coordinates");
+	gtk_box_pack_start(GTK_BOX (pVbox), UTC, FALSE, FALSE, 3);
 
 	return pVbox;
 }
@@ -523,6 +455,12 @@ int run(GList **config)
 	GtkTreeIter iter, iter_parent;
   	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(timeview));
   	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(timeview));
+
+	gboolean utcchecked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(UTC));
+	if(utcchecked == TRUE)
+		fwtime_hwclockconf(CLOCKFILE, "UTC");
+	else
+		fwtime_hwclockconf(CLOCKFILE, "localtime");
 
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {

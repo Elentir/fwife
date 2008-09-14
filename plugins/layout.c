@@ -124,7 +124,7 @@ GtkWidget *load_gtk_widget()
 	GtkTreeViewColumn *col;
 	GtkTreeIter iter;
 	GtkCellRenderer *renderer;
-	GtkWidget *pScrollbar, *labelhelp, *pvbox;
+	GtkWidget *pScrollbar, *pvbox;
 	GtkTreeSelection *selection;
 
 	if (layoutl)
@@ -142,6 +142,7 @@ GtkWidget *load_gtk_widget()
 	view = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
@@ -167,12 +168,8 @@ GtkWidget *load_gtk_widget()
 	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
 	pvbox = gtk_vbox_new(FALSE, 5);
-	labelhelp = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(labelhelp), "<span face=\"Courier New\"><b>Select keybord you want</b></span>\n");
-	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 10);
 
 	return pvbox;
 }

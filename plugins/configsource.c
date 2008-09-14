@@ -268,19 +268,10 @@ GtkWidget *mirrorview()
 
 GtkWidget *load_gtk_widget()
 {	
-	GtkWidget *button, *pScrollbar, *pSeparator, *doclabel;
+	GtkWidget *button, *pScrollbar;
 	GtkTreeSelection *selection;
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
 	GtkWidget *pHBox = gtk_hbox_new(FALSE, 5);
-	
-	// help label
-	doclabel = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(doclabel), "<span face=\"Courier New\"><b>This you can select your favorite mirrors, and blablabla</b></span>\n");
-	gtk_box_pack_start(GTK_BOX(pVBox), doclabel, FALSE, FALSE, 0);
-	
-	// first separator
-	pSeparator = gtk_hseparator_new();
-    	gtk_box_pack_start(GTK_BOX(pVBox), pSeparator, FALSE, FALSE, 0);
 	
 	// array of mirrors
 	viewserver = mirrorview();
@@ -289,9 +280,9 @@ GtkWidget *load_gtk_widget()
         pScrollbar = gtk_scrolled_window_new(NULL, NULL);	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), viewserver);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	gtk_box_pack_start(GTK_BOX(pVBox), pScrollbar, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pScrollbar, TRUE, TRUE, 8);
 	
-	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 10);
+	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 5);
 	button = gtk_button_new_from_stock (GTK_STOCK_ADD );
         g_signal_connect (button, "clicked", G_CALLBACK (add_mirror), viewserver);
         gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);

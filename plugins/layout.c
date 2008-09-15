@@ -169,7 +169,11 @@ GtkWidget *load_gtk_widget()
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	pvbox = gtk_vbox_new(FALSE, 5);
-	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 10);
+
+	GtkWidget *labelhelp = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(labelhelp), "<span face=\"Courier New\"><b>Select your keybord layout to continue</b></span>\n");
+	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 6);
+	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 0);
 
 	return pvbox;
 }

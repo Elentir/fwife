@@ -20,8 +20,7 @@ Plugins : -> Make help widget for each plugin
 Core:  -> Select language before loading gtk plugins (have a correct translation)
 
 Partdisk plugin : -> improve dialog box interface
-	          -> add a button for launch gparted (and refresh part list after)
-		  -> add raid support
+	          -> add raid support
 		  -> refresh part type and add msgbox when formatting
 
 Select plugin : -> add a basic mode (expert mode supported)		

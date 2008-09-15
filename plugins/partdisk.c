@@ -36,6 +36,7 @@
 //* Lists for preloading partition *//
 GList *parts=NULL;
 GList *allparts=NULL;
+GList *devs=NULL;
 
 //* Current root partition selected */
 GList* rootpart = NULL;
@@ -43,6 +44,7 @@ GList* rootpart = NULL;
 int nbswap = 0;
 
 GtkWidget *comboparts;
+GtkWidget *partview;
 
 enum 
 {
@@ -221,16 +223,27 @@ int detect_parts(int noswap)
 	PedDevice *dev = NULL;
 	PedDisk *disk = NULL;
 
-	/*if(parts)
-	{
-		g_list_free(parts);
-		parts = NULL;
-	}*/
 	ped_device_free_all();
 	chdir("/");
 
 	ped_exception_set_handler(peh);
 	ped_device_probe_all();
+	
+	if(allparts != NULL)
+	{
+		int i;
+		for(i=0;i<g_list_length(allparts);i++)
+		{
+			data_t *dat = (data_t*)g_list_nth_data(allparts, i);
+			if(dat->data)
+				g_list_free(dat->data);
+		}
+		g_list_free(allparts);
+		allparts = NULL;
+		parts=NULL;
+		gtk_list_store_clear(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))));
+		
+	}
 
 	if(ped_device_get_next(NULL)==NULL)
 		// no disk detected already handled before, no need to inform
@@ -245,11 +258,9 @@ int detect_parts(int noswap)
 		disk = ped_disk_new(dev);
 		if(disk)
 		{
-			if (allparts != NULL)
-				g_list_free(allparts);
 			listparts(disk, noswap);
 			data_put(&allparts, dev->path, parts);
-			parts = NULL;			
+			parts = NULL;	
 		}
 	}
 
@@ -279,13 +290,11 @@ int buggy_md0()
 	return(1);
 }
 
-GList *listdevs(void)
+int listdevs(void)
 {
-	GList *devs=NULL;
 	PedDevice *dev=NULL;
 	char *ptr;
-	long long int *taille;
-
+		
 	// silly raid autodetect, md0 always created
 	if(buggy_md0())
 		unlink("/dev/md0");
@@ -294,26 +303,24 @@ GList *listdevs(void)
 	ped_device_probe_all();
 
 	if(ped_device_get_next(NULL)==NULL)
-		return(NULL);
+		return(-1);
 
 	for(dev=ped_device_get_next(NULL);dev!=NULL;dev=dev->next)
 	{
 		if(dev->read_only)
 			// we don't want to partition cds ;-)
 			continue;
-		devs = g_list_append(devs, dev->path);
+		devs = g_list_append(devs, strdup(dev->path));
 		ptr = fsize(dev->length);
 		devs = g_list_append(devs, g_strdup_printf("%s\t%s", ptr, dev->model));
-		taille = malloc(sizeof(long long int));
-		*taille = dev->length;
-		devs = g_list_append(devs, taille);
 		FREE(ptr);
 	}
 
-	return(devs);
+	return(0);
 }
 
-GtkTreeModel *create_stock_icon_store (GList *devs)
+//* Create combolist with nice icons *//
+GtkTreeModel *create_stock_icon_store ()
 {
 	GtkStockItem item;
 	GdkPixbuf *pixbuf;
@@ -341,20 +348,7 @@ GtkTreeModel *create_stock_icon_store (GList *devs)
 	return GTK_TREE_MODEL (store);
 }
 
-void set_sensitive (GtkCellLayout *cell_layout,GtkCellRenderer *cell, GtkTreeModel *tree_model, GtkTreeIter *iter, gpointer data)
-{
-	GtkTreePath *path;
-	gint *indices;
-	gboolean sensitive;
-
-	path = gtk_tree_model_get_path (tree_model, iter);
-	indices = gtk_tree_path_get_indices (path);
-	sensitive = indices[0] != 1;
-	gtk_tree_path_free (path);
-
-	g_object_set (cell, "sensitive", sensitive, NULL);
-}
-
+//* Add a mountpoint into fstab file *//
 int mountdev(char *dev, char *mountpoint, gboolean isswap, GList **config)
 {
 	char *type=NULL;
@@ -391,6 +385,7 @@ int mountdev(char *dev, char *mountpoint, gboolean isswap, GList **config)
 	return(0);
 }
 
+//* Foramt a partition and create filesystem on it *//
 int mkfss(char *dev, char *fs, gboolean checked)
 {
 	char *opts=NULL;
@@ -403,7 +398,7 @@ int mkfss(char *dev, char *fs, gboolean checked)
 	umount(findmount(dev, 1));
 	if(!strcmp(fs, "ext2"))
 		return(fw_system(g_strdup_printf("mke2fs %s %s", opts, dev)));
-	else if(!strcmp(fs, "ext3 - Journalistic version of ext2"))
+	else if(!strcmp(fs, "ext3"))
 		return(fw_system(g_strdup_printf("mke2fs -j %s %s", opts, dev)));
 	else if(!strcmp(fs, "reiserfs"))
 		return(fw_system(g_strdup_printf("echo y |mkreiserfs %s", dev)));
@@ -450,7 +445,7 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 			{
 				if(!strcmp(old_text, "/"))
 				{
-					fwife_error("If you want to change your root partition, select another root partition and use appropriate button!");
+					fwife_error("If you want to change your root partition, select another partition and use appropriate button!");
 					return;
 				}
 				else if(!strcmp(old_text, "swap"))
@@ -488,39 +483,44 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 	gtk_tree_path_free (path);
 }
 
-void update_treeview_list(gpointer view)
+
+//* Update partview (partition list) *//
+void update_treeview_list()
 {
 	int i;
 	GtkTreeIter iter;
 	
-	gtk_list_store_clear(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))));
+	gtk_list_store_clear(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))));
 	
-	for(i=0; i < g_list_length(parts); i+=4 ) 
-	{		
-		char *mount = (char*)g_list_nth_data(parts,i+3);
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
+	if(parts != NULL)
+	{
+		for(i=0; i < g_list_length(parts); i+=4 ) 
+		{		
+			char *mount = (char*)g_list_nth_data(parts,i+3);
+			gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))), &iter);
 		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter, NAME_COLUMN, (char*)g_list_nth_data(parts, i), SIZE_COLUMN, (char*)g_list_nth_data(parts, i+1), FS_COLUMN,(char*)g_list_nth_data(parts, i+2), -1);
-		if(mount)
-		{
-			if(!strcmp(mount, "/"))
+			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))), &iter, NAME_COLUMN, (char*)g_list_nth_data(parts, i), SIZE_COLUMN, (char*)g_list_nth_data(parts, i+1), FS_COLUMN,(char*)g_list_nth_data(parts, i+2), -1);
+			if(mount)
 			{
-				GtkWidget *cellview = gtk_cell_view_new ();	
-				GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_HOME, GTK_ICON_SIZE_BUTTON, NULL);
-				gtk_widget_destroy (cellview);
-				gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter, TYPE_COLUMN, pixbuf,MOUNT_COLUMN, mount,-1);
-			}
-			else if(!strcmp(mount, "swap"))
-			{
-				GtkWidget *cellview = gtk_cell_view_new ();	
-				GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_CONVERT, GTK_ICON_SIZE_BUTTON, NULL);
-				gtk_widget_destroy (cellview);
-				gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter, TYPE_COLUMN, pixbuf,MOUNT_COLUMN, mount,-1);
-			}
-			else
-			{
-				gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter, MOUNT_COLUMN, mount,-1);
-			}
+				if(!strcmp(mount, "/"))
+				{
+					GtkWidget *cellview = gtk_cell_view_new ();	
+					GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_HOME, GTK_ICON_SIZE_BUTTON, NULL);
+					gtk_widget_destroy (cellview);
+					gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))), &iter, TYPE_COLUMN, pixbuf,MOUNT_COLUMN, mount,-1);
+				}
+				else if(!strcmp(mount, "swap"))
+				{
+					GtkWidget *cellview = gtk_cell_view_new ();	
+					GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_CONVERT, GTK_ICON_SIZE_BUTTON, NULL);
+					gtk_widget_destroy (cellview);
+					gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))), &iter, TYPE_COLUMN, pixbuf,MOUNT_COLUMN, mount,-1);
+				}
+				else
+				{
+					gtk_list_store_set (GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(partview))), &iter, MOUNT_COLUMN, mount,-1);
+				}
+			}	
 		}
 	}
 }
@@ -560,7 +560,7 @@ int requestformat(char *namedev)
 	GtkWidget *pRadio1 = gtk_radio_button_new_with_label(NULL, "ext2");
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio1, FALSE, FALSE, 0);
 	/* Ajout du deuxieme */
-	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "ext3 - Journalistic version of ext2");
+	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "ext3");
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio2, FALSE, FALSE, 0);
 	/* Ajout du troisieme */
 	GtkWidget *pRadio3 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "reiserfs");
@@ -618,7 +618,25 @@ int requestformat(char *namedev)
 		else
 		{
 			gboolean checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
-			mkfss(namedev, sLabel, checked);
+			//* if sucessfull, replace into glist and update treeview *//
+			if(mkfss(namedev, sLabel, checked) == 0)
+			{
+				int i;
+				for(i=0; i<g_list_length(parts); i+=4)
+				{
+					if(!strcmp((char*)g_list_nth_data(parts, i), namedev))
+						break;
+				}
+				
+				GList *elem = g_list_nth(parts, i+2);
+				if(elem)
+				{
+					FREE(elem->data);
+					elem->data = strdup(sLabel);
+				}
+				update_treeview_list();
+			}	
+				
 		}
 		break;
 		/* Exit */
@@ -664,14 +682,30 @@ int swapformat(char *namedev)
 	{
 		/* L utilisateur valide */
 		case GTK_RESPONSE_OK:
-			mkfss(namedev, "swap", FALSE);
+			if(mkfss(namedev, "swap", FALSE) == 0)
+			{
+				int i;
+				for(i=0; i<g_list_length(parts); i+=4)
+				{
+					if(!strcmp((char*)g_list_nth_data(parts, i), namedev))
+						break;
+				}
+				
+				GList *elem = g_list_nth(parts, i+2);
+				if(elem)
+				{
+					FREE(elem->data);
+					elem->data = strdup("linux-swap");
+				}
+				update_treeview_list();
+			}			
 			break;
 			/* L utilisateur annule */
 		case GTK_RESPONSE_CANCEL:
 		case GTK_RESPONSE_NONE:
 		default:
 			gtk_widget_destroy(pBoite);
-			return -1;
+			return 1;
 			break;
 	}
 	gtk_widget_destroy(pBoite);
@@ -684,8 +718,8 @@ void set_root_part(GtkWidget *widget, gpointer data)
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;
 	char* namedev;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));	
-	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(data)));
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(partview));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(partview)));
 	
 	GtkWidget *cellview = gtk_cell_view_new ();
 	GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_HOME, GTK_ICON_SIZE_BUTTON, NULL);
@@ -724,12 +758,12 @@ void set_root_part(GtkWidget *widget, gpointer data)
 		
 		rootpart = point;
 		
-		update_treeview_list(data);	
-		
 		if(rootpart && nbswap>0)
 		{
 			set_page_completed();
-		}		
+		}
+				
+		update_treeview_list();
 	}	
 	g_object_unref(pixbuf);
 }
@@ -739,8 +773,8 @@ void set_format_part(GtkWidget *widget, gpointer data)
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;
 	char* namedev;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));	
-	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(data)));
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(partview));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(partview)));
 	if(gtk_tree_selection_get_selected(selection, &model, &iter))
 	{
 		gtk_tree_model_get (model, &iter, NAME_COLUMN, &namedev, -1);
@@ -755,24 +789,26 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;
 	char* namedev;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));	
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(partview));	
 	
 	GtkWidget *cellview = gtk_cell_view_new ();	
 	GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_CONVERT, GTK_ICON_SIZE_BUTTON, NULL);
 	gtk_widget_destroy (cellview);
 	
-	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(data)));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(partview)));	
 	if(gtk_tree_selection_get_selected(selection, &model, &iter))
 	{
 		GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
-		gchar *mount = g_strdup("swap");
+		gchar *mount = strdup("swap");
 		gint i = gtk_tree_path_get_indices (path)[0];	
 		GList *point = g_list_nth  (parts, 4*i+3);
 		gtk_tree_model_get (model, &iter, NAME_COLUMN, &namedev, -1);
 		
 		// Case if we want to change the root partition to a swap one
 		if(point->data && !strcmp((char*)point->data,"/"))
+		{
 			return;
+		}
 		if(swapformat(namedev) == -1)
 			return;
 		// Free old pointer
@@ -790,10 +826,12 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 			set_page_completed();
 		}	
 	}
+	update_treeview_list();
 	g_object_unref(pixbuf);	
 }
 
-void change_part_list(GtkComboBox *combo, gpointer view)
+//* Change combo so load correct glist and refresh treeview *//
+void change_part_list(GtkComboBox *combo, gpointer data)
 {
 	char *selected;
 	GtkTreeIter iter;
@@ -802,22 +840,49 @@ void change_part_list(GtkComboBox *combo, gpointer view)
 	model = gtk_combo_box_get_model(combo);
 	gtk_tree_model_get (model, &iter, TEXT_COL, &selected, -1);
 	
+	GList *elem = g_list_find_custom(devs, selected, cmp_str);
+	if(elem != NULL)
+	{
+		int pos = g_list_position(devs, elem);
+		gtk_label_set_label(GTK_LABEL(data), (char*)g_list_nth_data(devs, pos+1));
+	}
+	else
+		gtk_label_set_label(GTK_LABEL(data), "");
+	
 	if (allparts)
 		parts = (GList*)data_get(allparts, selected);
 	
-	update_treeview_list(view);
+	update_treeview_list();
+}
+
+void run_gparted()
+{
+	switch(fwife_question("Do you want to run gparted to create/modify partitions?"))
+	{
+		case GTK_RESPONSE_YES:
+			fw_system_interactive("gparted");
+			detect_parts(0);
+			gtk_combo_box_set_active (GTK_COMBO_BOX (comboparts), 0);
+			change_part_list(GTK_COMBO_BOX (comboparts), NULL);
+			//* Mountpoint are reset *//
+			nbswap = 0;
+			rootpart = NULL;
+			set_page_incompleted();
+			break;
+		case GTK_RESPONSE_NO:
+			break;
+	}
 }
 
 //* Load gtk widget for this plugin *//
 GtkWidget *load_gtk_widget()
 {
 	GtkWidget *pVBox, *pHBox, *info;
-	GtkWidget *diskinfo, *device, *separatorh1;	
+	GtkWidget *diskinfo, *device;	
 
-	GList* devs= listdevs();		
+	listdevs();		
 	
-	/* Drawing partition with first harddisk */
-	//panel = draw_partition();
+	//* Combobox containing devices *//
 	pVBox = gtk_vbox_new(FALSE, 5);	
 	
 	info = gtk_label_new(NULL);
@@ -829,8 +894,7 @@ GtkWidget *load_gtk_widget()
 	gtk_box_pack_start (GTK_BOX (pVBox), pHBox, FALSE, FALSE, 0);
 	
 	device = gtk_label_new(_(" Devices : "));
-	gtk_box_pack_start (GTK_BOX (pHBox), device, FALSE, FALSE, 0);
-	
+	gtk_box_pack_start (GTK_BOX (pHBox), device, FALSE, FALSE, 0);	
 	
 	/*GTK Widget for selecting harddisk */
 	GtkTreeModel *model = create_stock_icon_store (devs);
@@ -843,45 +907,39 @@ GtkWidget *load_gtk_widget()
 	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (comboparts), renderer, FALSE);
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (comboparts), renderer, "pixbuf", PIXBUF_COL, NULL);
 
-	gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (comboparts), renderer, set_sensitive, NULL, NULL);
+	//gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (comboparts), renderer, set_sensitive, NULL, NULL);
     
 	renderer = gtk_cell_renderer_text_new();
 	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (comboparts), renderer, TRUE);
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (comboparts), renderer,"text", TEXT_COL, NULL);
 
-	gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (comboparts), renderer, set_sensitive, NULL, NULL);
-		
-	diskinfo = gtk_label_new((char*)g_list_nth_data(devs,1));
+	diskinfo = gtk_label_new("");
 	gtk_box_pack_start (GTK_BOX (pHBox), diskinfo, FALSE, TRUE, 50);
-	
-	separatorh1 = gtk_hseparator_new();
-	gtk_box_pack_start (GTK_BOX (pVBox), separatorh1, FALSE, FALSE, 5);	
 	
 	/* List of device partition with mountpoints and other*/
 	
 	GtkListStore *store;
 	GtkTreeViewColumn *col;
-	GtkWidget *view;
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
 	GtkWidget *hboxlist;
 	
 	hboxlist = gtk_hbox_new(TRUE, 5);
-	gtk_box_pack_start (GTK_BOX (pVBox), hboxlist, TRUE, TRUE, 0);	
+	gtk_box_pack_start (GTK_BOX (pVBox), hboxlist, TRUE, TRUE, 10);	
 	
 	store = gtk_list_store_new(NUM_COLUMN, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
-	view = gtk_tree_view_new_with_model(model);
+	partview = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
+	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(partview), TRUE);
 	
 	// a small icon for swap and root partition
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", TYPE_COLUMN, NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 	
 	// partition name
 	col = gtk_tree_view_column_new();
@@ -889,7 +947,7 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", NAME_COLUMN, NULL);
 	gtk_tree_view_column_set_title(col, "Partition");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 		
 	// partition size
 	col = gtk_tree_view_column_new();
@@ -897,7 +955,7 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", SIZE_COLUMN, NULL);
 	gtk_tree_view_column_set_title(col, "Size");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 	
 	// current filesystem
 	col = gtk_tree_view_column_new();
@@ -905,7 +963,7 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", FS_COLUMN, NULL);
 	gtk_tree_view_column_set_title(col, "Filesystem");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 	
 	// mountpoint
 	col = gtk_tree_view_column_new();
@@ -916,57 +974,59 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", MOUNT_COLUMN, NULL);
 	gtk_tree_view_column_set_title(col, "Mountpoint");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 
-	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
+	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partview));
 	gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
       
 	pScrollbar = gtk_scrolled_window_new(NULL, NULL);
 	
-	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), partview);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
 	gtk_box_pack_start(GTK_BOX(hboxlist), pScrollbar, FALSE, TRUE, 0);
 	
-	GtkWidget *mainpart, *swappart, *format, *buttonlist;
+	//* Buttons at end page *//
+	GtkWidget *mainpart, *swappart, *format, *buttonlist, *gparted;
+	GtkWidget *image;
 	
 	buttonlist = gtk_hbox_new(TRUE, 10);
 	gtk_box_pack_start (GTK_BOX (pVBox), buttonlist, FALSE, FALSE, 10);
 	
-	GtkWidget *image;
+	//* Set buttons *//
 	mainpart = gtk_button_new_with_label("Set as root partition");
 	swappart = gtk_button_new_with_label("Set as swap partition");
 	format = gtk_button_new_with_label("Format partition");
+	gparted = gtk_button_new_with_label("Run Gparted");
+	
+	//* Set images *//
 	image = gtk_image_new_from_stock (GTK_STOCK_DELETE, 3);
 	gtk_button_set_image(GTK_BUTTON(format), image);
 	image = gtk_image_new_from_stock (GTK_STOCK_HOME, 3);
 	gtk_button_set_image(GTK_BUTTON(mainpart), image);
-	//* connect button to the select root part function *//
-	g_signal_connect (mainpart, "clicked",G_CALLBACK (set_root_part), view);
 	image = gtk_image_new_from_stock (GTK_STOCK_CONVERT, 3);
 	gtk_button_set_image(GTK_BUTTON(swappart), image);
-	g_signal_connect (swappart, "clicked", G_CALLBACK (set_swap_part), view);
-	g_signal_connect (format, "clicked", G_CALLBACK (set_format_part), view);
-	g_signal_connect(G_OBJECT(comboparts), "changed", G_CALLBACK(change_part_list), view);	
+	image = gtk_image_new_from_file("images/gparted.png");
+	gtk_button_set_image(GTK_BUTTON(gparted), image);
 	
+	//* connect button to the select root part function *//
+	g_signal_connect (mainpart, "clicked",G_CALLBACK (set_root_part), NULL);
+	g_signal_connect (swappart, "clicked", G_CALLBACK (set_swap_part), NULL);
+	g_signal_connect (format, "clicked", G_CALLBACK (set_format_part), partview);
+	g_signal_connect (gparted, "clicked", G_CALLBACK (run_gparted), partview);
+	g_signal_connect(G_OBJECT(comboparts), "changed", G_CALLBACK(change_part_list), diskinfo);	
+	
+	//* Add them to the box *//
 	gtk_box_pack_start (GTK_BOX (buttonlist), mainpart, TRUE, FALSE, 10);
 	gtk_box_pack_start (GTK_BOX (buttonlist), swappart, TRUE, FALSE, 10);
 	gtk_box_pack_start (GTK_BOX (buttonlist), format, TRUE, FALSE, 10);
+	gtk_box_pack_start (GTK_BOX (buttonlist), gparted, TRUE, FALSE, 10);
 		
 	return pVBox;
 }
 
 int prerun(GList **config)
 {
-	switch(fwife_question("Do you want to run gparted to create/modify partitions?"))
-	{
-		case GTK_RESPONSE_YES:
-			fw_system_interactive("gparted");
-			break;
-		case GTK_RESPONSE_NO:
-			break;
-	}
-
 	if(allparts == NULL)
 	{
 		detect_parts(0);
@@ -975,6 +1035,7 @@ int prerun(GList **config)
 	return 0;
 }
 
+//* Run plugin and create fstab file *//
 int run(GList **config)
 {
 	char *fn, *dev, *mount, *type, *op, *np;
@@ -1017,7 +1078,7 @@ int run(GList **config)
 				dev = (char*)g_list_nth_data(partition, j);
 				mount = (char*)g_list_nth_data(partition, j+3);
 				type = (char*)g_list_nth_data(partition, j+2);
-				if(!strcmp(mount, "swap") && !strcmp(type, "linux-swap"))
+				if(!strcmp(mount, "swap") || !strcmp(type, "linux-swap"))
 					mountdev(dev, mount, TRUE, config);
 				else
 					mountdev(dev, mount, FALSE, config);

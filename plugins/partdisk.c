@@ -721,10 +721,6 @@ void set_root_part(GtkWidget *widget, gpointer data)
 	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(partview));	
 	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(partview)));
 	
-	GtkWidget *cellview = gtk_cell_view_new ();
-	GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_HOME, GTK_ICON_SIZE_BUTTON, NULL);
-	gtk_widget_destroy (cellview);
-	
 	if(gtk_tree_selection_get_selected(selection, &model, &iter))
 	{
 		if(rootpart)
@@ -765,7 +761,6 @@ void set_root_part(GtkWidget *widget, gpointer data)
 				
 		update_treeview_list();
 	}	
-	g_object_unref(pixbuf);
 }
 
 void set_format_part(GtkWidget *widget, gpointer data)
@@ -791,10 +786,6 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 	char* namedev;
 	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(partview));	
 	
-	GtkWidget *cellview = gtk_cell_view_new ();	
-	GdkPixbuf *pixbuf = gtk_widget_render_icon (cellview, GTK_STOCK_CONVERT, GTK_ICON_SIZE_BUTTON, NULL);
-	gtk_widget_destroy (cellview);
-	
 	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(partview)));	
 	if(gtk_tree_selection_get_selected(selection, &model, &iter))
 	{
@@ -816,8 +807,6 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 			g_free(point->data);
 		// add new
 		point->data = mount;
-		// update Treelist
-		gtk_list_store_set (GTK_LIST_STORE (model), &iter, TYPE_COLUMN, pixbuf,MOUNT_COLUMN, mount,-1);
 		// yeah we have a new swap partition
 		nbswap++;
 		// check if completed page conditions are verified
@@ -826,8 +815,7 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 			set_page_completed();
 		}	
 	}
-	update_treeview_list();
-	g_object_unref(pixbuf);	
+	update_treeview_list();	
 }
 
 //* Change combo so load correct glist and refresh treeview *//
@@ -855,7 +843,7 @@ void change_part_list(GtkComboBox *combo, gpointer data)
 	update_treeview_list();
 }
 
-void run_gparted()
+void run_gparted(GtkWidget *widget, gpointer data)
 {
 	switch(fwife_question("Do you want to run gparted to create/modify partitions?"))
 	{
@@ -863,7 +851,7 @@ void run_gparted()
 			fw_system_interactive("gparted");
 			detect_parts(0);
 			gtk_combo_box_set_active (GTK_COMBO_BOX (comboparts), 0);
-			change_part_list(GTK_COMBO_BOX (comboparts), NULL);
+			change_part_list(GTK_COMBO_BOX (comboparts), data);
 			//* Mountpoint are reset *//
 			nbswap = 0;
 			rootpart = NULL;
@@ -1013,7 +1001,7 @@ GtkWidget *load_gtk_widget()
 	g_signal_connect (mainpart, "clicked",G_CALLBACK (set_root_part), NULL);
 	g_signal_connect (swappart, "clicked", G_CALLBACK (set_swap_part), NULL);
 	g_signal_connect (format, "clicked", G_CALLBACK (set_format_part), partview);
-	g_signal_connect (gparted, "clicked", G_CALLBACK (run_gparted), partview);
+	g_signal_connect (gparted, "clicked", G_CALLBACK (run_gparted), diskinfo);
 	g_signal_connect(G_OBJECT(comboparts), "changed", G_CALLBACK(change_part_list), diskinfo);	
 	
 	//* Add them to the box *//

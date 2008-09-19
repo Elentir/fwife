@@ -455,6 +455,10 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 						case GTK_RESPONSE_YES:
 							gtk_list_store_set (GTK_LIST_STORE (model), &iter, TYPE_COLUMN, NULL, -1);
 							nbswap--;
+							if(nbswap<=0)
+							{
+								set_page_incompleted();
+							}
 							break;
 						case GTK_RESPONSE_NO:
 							return;

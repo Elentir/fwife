@@ -436,7 +436,7 @@ GtkWidget *load_gtk_widget()
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
 						
-	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
+	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
 	viewif = gtk_tree_view_new_with_model(model);
@@ -548,7 +548,7 @@ int run(GList **config)
 		return(1);
 	memset(newprofile, 0, sizeof(fwnet_profile_t));
 	
-	sprintf(newprofile->name, "essai");
+	sprintf(newprofile->name, "default");
 	for(i = 1; i<g_list_length(interfaceslist); i+=2)
 	{
 		newprofile->interfaces = g_list_append(newprofile->interfaces, (fwnet_interface_t *) g_list_nth_data(interfaceslist, i));

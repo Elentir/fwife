@@ -24,7 +24,6 @@
 #include<string.h>
 
 #include "common.h"
-#include "../util.h"
 
 plugin_t plugin =
 {

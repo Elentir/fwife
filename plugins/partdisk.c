@@ -445,12 +445,12 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 			{
 				if(!strcmp(old_text, "/"))
 				{
-					fwife_error("If you want to change your root partition, select another partition and use appropriate button!");
+					fwife_error(_("If you want to change your root partition, select another partition and use appropriate button!"));
 					return;
 				}
 				else if(!strcmp(old_text, "swap"))
 				{
-					switch(fwife_question("Don't use this partition as a swap"))
+					switch(fwife_question(_("Don't use this partition as a swap")))
 					{
 						case GTK_RESPONSE_YES:
 							gtk_list_store_set (GTK_LIST_STORE (model), &iter, TYPE_COLUMN, NULL, -1);
@@ -468,7 +468,7 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 			}
 			if(new_text && (!strcmp(new_text, "/") || !strcmp(new_text, "swap")))
 			{
-				fwife_error("Use appropriate button to do that");
+				fwife_error(_("Use appropriate button to do that"));
 			}
 			else if(new_text)
 			{
@@ -537,7 +537,7 @@ int requestformat(char *namedev)
    	char *sLabel;
 	extern GtkWidget *assistant;
 	
-	GtkWidget* pBoite = gtk_dialog_new_with_buttons("Do you want to format partition?",
+	GtkWidget* pBoite = gtk_dialog_new_with_buttons(_("Do you want to format partition?"),
 			GTK_WINDOW(assistant),
    			GTK_DIALOG_MODAL,
    			GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -552,12 +552,12 @@ int requestformat(char *namedev)
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
 
 	/* On utilise les balises */
-	gtk_label_set_markup(GTK_LABEL(pLabelInfo), "<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! This will erase all your data on that partition !!!</b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! This will erase all your data on that partition !!!</b></span>\n"));
 	
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
 
 	
-	GtkWidget *pLabel = gtk_label_new("Choose filesystem :");
+	GtkWidget *pLabel = gtk_label_new(_("Choose filesystem :"));
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 0);
 
 	/* Creation du premier bouton radio */
@@ -573,16 +573,16 @@ int requestformat(char *namedev)
 	GtkWidget *pRadio4 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "xfs");
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio4, FALSE, FALSE, 0);
 	
-	GtkWidget *pRadio5 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "noformat - keep filesystem");
+	GtkWidget *pRadio5 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("noformat - keep filesystem"));
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio5, FALSE, FALSE, 0);
 	
 	GtkWidget *separator = gtk_hseparator_new();
 	gtk_box_pack_start (GTK_BOX (pVBox), separator, FALSE, FALSE, 5);
 	
-	GtkWidget *pLabel2 = gtk_label_new("Options :");
+	GtkWidget *pLabel2 = gtk_label_new(_("Options :"));
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabel2, FALSE, FALSE, 5);
 	
-	GtkWidget *check = gtk_check_button_new_with_label("formatting check - slowly");
+	GtkWidget *check = gtk_check_button_new_with_label(_("formatting check - slowly"));
 	gtk_box_pack_start(GTK_BOX (pVBox), check, FALSE, FALSE, 5);
 	
 	/* Show vbox  */
@@ -614,7 +614,7 @@ int requestformat(char *namedev)
             		pList = g_slist_next(pList);
         		}
     		}
-		if(!strcmp(sLabel, "noformat - keep filesystem"))
+		if(!strcmp(sLabel, _("noformat - keep filesystem")))
 		{
 			gtk_widget_destroy(pBoite);
 			return 0;
@@ -660,7 +660,7 @@ int swapformat(char *namedev)
 {
 	extern GtkWidget *assistant;
 		
-	GtkWidget* pBoite = gtk_dialog_new_with_buttons("Do you want to format partition?",
+	GtkWidget* pBoite = gtk_dialog_new_with_buttons(_("Do you want to format partition?"),
 			GTK_WINDOW(assistant),
    			GTK_DIALOG_MODAL,
    			GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -674,7 +674,7 @@ int swapformat(char *namedev)
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
 
 	/* On utilise les balises */
-	gtk_label_set_markup(GTK_LABEL(pLabelInfo), "<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! You need to format is you want to do a swap partition!\nThis will erase all your data on that partition !!!\n\n Do you want to continue? </b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! You need to format is you want to do a swap partition!\nThis will erase all your data on that partition !!!\n\n Do you want to continue? </b></span>\n"));
 	
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
 	
@@ -729,7 +729,7 @@ void set_root_part(GtkWidget *widget, gpointer data)
 	{
 		if(rootpart)
 		{
-			switch(fwife_question("Change root partition?"))
+			switch(fwife_question(_("Change root partition?")))
 			{
 				case GTK_RESPONSE_YES:
 					if(rootpart->data)
@@ -849,7 +849,7 @@ void change_part_list(GtkComboBox *combo, gpointer data)
 
 void run_gparted(GtkWidget *widget, gpointer data)
 {
-	switch(fwife_question("Do you want to run gparted to create/modify partitions?"))
+	switch(fwife_question(_("Do you want to run gparted to create/modify partitions?")))
 	{
 		case GTK_RESPONSE_YES:
 			fw_system_interactive("gparted");
@@ -878,7 +878,7 @@ GtkWidget *load_gtk_widget()
 	pVBox = gtk_vbox_new(FALSE, 5);	
 	
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), "<span face=\"Courier New\"><b>This you can select main mountpoints launch gparted and format partitions and mabe many other things</b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>This you can select main mountpoints launch gparted and format partitions and mabe many other things</b></span>\n"));
 	gtk_box_pack_start (GTK_BOX (pVBox),info, FALSE, FALSE, 10);
 	
 	/* HBox for disk information and selection */
@@ -938,7 +938,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", NAME_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Partition");
+	gtk_tree_view_column_set_title(col, _("Partition"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 		
 	// partition size
@@ -946,7 +946,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", SIZE_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Size");
+	gtk_tree_view_column_set_title(col, _("Size"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 	
 	// current filesystem
@@ -954,7 +954,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", FS_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Filesystem");
+	gtk_tree_view_column_set_title(col, _("Filesystem"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 	
 	// mountpoint
@@ -965,7 +965,7 @@ GtkWidget *load_gtk_widget()
 	g_object_set_data(G_OBJECT (renderer), "column", GINT_TO_POINTER (MOUNT_COLUMN));
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", MOUNT_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Mountpoint");
+	gtk_tree_view_column_set_title(col, _("Mountpoint"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partview));
@@ -986,10 +986,10 @@ GtkWidget *load_gtk_widget()
 	gtk_box_pack_start (GTK_BOX (pVBox), buttonlist, FALSE, FALSE, 10);
 	
 	//* Set buttons *//
-	mainpart = gtk_button_new_with_label("Set as root partition");
-	swappart = gtk_button_new_with_label("Set as swap partition");
-	format = gtk_button_new_with_label("Format partition");
-	gparted = gtk_button_new_with_label("Run Gparted");
+	mainpart = gtk_button_new_with_label(_("Set as root partition"));
+	swappart = gtk_button_new_with_label(_("Set as swap partition"));
+	format = gtk_button_new_with_label(_("Format partition"));
+	gparted = gtk_button_new_with_label(_("Run Gparted"));
 	
 	//* Set images *//
 	image = gtk_image_new_from_stock (GTK_STOCK_DELETE, 3);

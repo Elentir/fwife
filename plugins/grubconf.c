@@ -33,9 +33,8 @@
 #include <libfwutil.h>
 
 #include "common.h"
-#include "../util.h"
 
-GtkWidget *pRadio1 = NULL;
+static GtkWidget *pRadio1 = NULL;
 
 plugin_t plugin =
 {
@@ -69,27 +68,27 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
 
 	/* On utilise les balises */
-	gtk_label_set_markup(GTK_LABEL(pLabelInfo), "<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! Hehehe this is grub !!! </b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! Hehehe this is grub !!! </b></span>\n"));
 	
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
 
 	GtkWidget *separator = gtk_hseparator_new();
 	gtk_box_pack_start (GTK_BOX (pVBox), separator, FALSE, FALSE, 5);
 	
-	GtkWidget *pLabel = gtk_label_new("Choose install type :");
+	GtkWidget *pLabel = gtk_label_new(_("Choose install type :"));
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 0);
 
 	/* Creation du premier bouton radio */
-	pRadio1 = gtk_radio_button_new_with_label(NULL, "MBR  -  Install to Master Boot Record");
+	pRadio1 = gtk_radio_button_new_with_label(NULL, _("MBR  -  Install to Master Boot Record"));
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio1, FALSE, FALSE, 0);
 	/* Ajout du deuxieme */
-	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "Floppy  -  Install to a formatted floppy in /dev/fd0");
+	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("Floppy  -  Install to a formatted floppy in /dev/fd0"));
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio2, FALSE, FALSE, 0);
 	/* Ajout du troisieme */
-	GtkWidget *pRadio3 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "Root  -  Install to superblock (do NOT use with XFS)");
+	GtkWidget *pRadio3 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("Root  -  Install to superblock (do NOT use with XFS)"));
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio3, FALSE, FALSE, 0);
 	
-	GtkWidget *pRadio4 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), "Skip  -  Skip the installation of GRUB.");
+	GtkWidget *pRadio4 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("Skip  -  Skip the installation of GRUB."));
 	gtk_box_pack_start(GTK_BOX (pVBox), pRadio4, FALSE, FALSE, 0);	
 
 	return pVBox;
@@ -122,11 +121,11 @@ int run(GList **config)
            		pList = g_slist_next(pList);
         	}
     	}
-	if(!strcmp(sLabel, "MBR  -  Install to Master Boot Record"))
+	if(!strcmp(sLabel, _("MBR  -  Install to Master Boot Record")))
 		mode = 0;
-	else if(!strcmp(sLabel, "Floppy  -  Install to a formatted floppy in /dev/fd0"))
+	else if(!strcmp(sLabel, _("Floppy  -  Install to a formatted floppy in /dev/fd0")))
 		mode = 1;
-	else if(!strcmp(sLabel, "Root  -  Install to superblock (do NOT use with XFS)"))
+	else if(!strcmp(sLabel, _("Root  -  Install to superblock (do NOT use with XFS)")))
 		mode = 2;
 	else
 		mode = 3;

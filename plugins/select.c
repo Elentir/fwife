@@ -30,19 +30,18 @@
 #include <stdlib.h>
 #include <pacman.h>
 
-//#include "../util.h"
 #include "common.h"
 
-GtkWidget *categories = NULL;
-GtkWidget *packetlist = NULL;
-GtkWidget *packetinfo = NULL;
+static GtkWidget *categories = NULL;
+static GtkWidget *packetlist = NULL;
+static GtkWidget *packetinfo = NULL;
+static GtkWidget *pvbox = NULL;
 
 // need some list to stock to manipulate packets more easily
-GList *syncs=NULL;
-GList *allpackets = NULL;
-GList *packets_current = NULL;
-GList *cats = NULL;
-GList *allpkgs = NULL;
+static GList *syncs=NULL;
+static GList *allpackets = NULL;
+static GList *packets_current = NULL;
+static GList *cats = NULL;
 
 enum 
 {
@@ -456,10 +455,7 @@ GtkWidget *getpacketlist()
 	
 	renderer = gtk_cell_renderer_toggle_new ();
 	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled_pack), model);
-	col = gtk_tree_view_column_new_with_attributes ("Use?",
-			renderer,
-   			"active", 0,
-   			NULL);
+	col = gtk_tree_view_column_new_with_attributes (_("Use?"), renderer, "active", 0, NULL);
 	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
 	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);
@@ -468,14 +464,14 @@ GtkWidget *getpacketlist()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, "Packet name");
+	gtk_tree_view_column_set_title(col, _("Packet name"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
-	gtk_tree_view_column_set_title(col, "Size");
+	gtk_tree_view_column_set_title(col, _("Size"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);		
 
 	gtk_tree_selection_set_mode (gtk_tree_view_get_selection (GTK_TREE_VIEW (packetlist)), GTK_SELECTION_SINGLE);
@@ -555,7 +551,7 @@ GtkWidget *getcategorieslist()
 	
 	renderer = gtk_cell_renderer_toggle_new ();
 	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled_cat), model);
-	col = gtk_tree_view_column_new_with_attributes ("Use?", renderer, "active", USE_COLUMN, NULL);
+	col = gtk_tree_view_column_new_with_attributes (_("Use?"), renderer, "active", USE_COLUMN, NULL);
 	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
 	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);
@@ -564,14 +560,14 @@ GtkWidget *getcategorieslist()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", CAT_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Categorie");
+	gtk_tree_view_column_set_title(col, _("Categorie"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", SIZE_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, "Size");
+	gtk_tree_view_column_set_title(col, _("Size"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);	
 
 	gtk_tree_selection_set_mode (gtk_tree_view_get_selection (GTK_TREE_VIEW (categories)), GTK_SELECTION_SINGLE);
@@ -593,14 +589,14 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *image;
 	GtkWidget *pvboxp = gtk_vbox_new(FALSE,10);
 	GtkWidget *phbox = gtk_hbox_new(TRUE,10);
-	GtkWidget *pvbox = gtk_vbox_new(FALSE,10);
+	pvbox = gtk_vbox_new(FALSE,10);
 	GtkWidget *phbox2 = gtk_hbox_new(FALSE,10);
 	GtkWidget *categl = getcategorieslist();
 	GtkWidget *packetl = getpacketlist();
 	hsepa1 = gtk_hseparator_new();
 	hsepa2 = gtk_hseparator_new();
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), "<span face=\"Courier New\"><b>Select packets you want to install</b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Select packets you want to install</b></span>\n"));
 	packetinfo = gtk_label_new(NULL);
 	gtk_label_set_justify(GTK_LABEL(packetinfo), GTK_JUSTIFY_LEFT);
 	// load a nice image
@@ -630,13 +626,22 @@ int prerun(GList **config)
 	GtkWidget* pBoite;
 	GtkWidget *progress, *vbox;
 	extern GtkWidget *assistant;	
+
+	switch(fwife_question(_("Do you want to use expert mode (show all package details)")))
+	{
+		case GTK_RESPONSE_YES:
+			break;
+		case GTK_RESPONSE_NO:
+			gtk_widget_hide(pvbox);
+			break;
+	}
 	
 	pBoite = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_transient_for(GTK_WINDOW(pBoite), GTK_WINDOW(assistant));
 	gtk_window_set_default_size(GTK_WINDOW(pBoite), 320, 70);
 	gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_window_set_modal(GTK_WINDOW(pBoite), TRUE);
-	gtk_window_set_title(GTK_WINDOW(pBoite), "Loading package's database");
+	gtk_window_set_title(GTK_WINDOW(pBoite), _("Loading package's database"));
  	gtk_window_set_deletable(GTK_WINDOW(pBoite), FALSE);
 
 	vbox = gtk_vbox_new (FALSE, 5);
@@ -652,10 +657,10 @@ int prerun(GList **config)
 	while (gtk_events_pending())
 		gtk_main_iteration ();	
 		
-	// if an instance of pacman running, set it down TOFIX : usefull?
+	// if an instance of pacman running, set it down
 	pacman_release();
 
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), "Initializing pacman-g2");	
+	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Initializing pacman-g2"));	
 	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.0);
 	
 	while (gtk_events_pending())
@@ -695,7 +700,7 @@ int prerun(GList **config)
 		
 	chdir(TARGETDIR);
 	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.1);
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), "Udpate and load database");
+	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Udpate and load database"));
 	if(prepare_pkgdb(PACCONF, config, &syncs) == -1)
 	{
 		return(-1);
@@ -759,6 +764,7 @@ int run(GList **config)
 	int i, j;
 	PM_LIST *lp, *junk, *sorted, *x;
 	char *ptr;
+	GList *allpkgs = NULL;
 	
 	if(cats == NULL)
 		return -1;

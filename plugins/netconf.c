@@ -34,12 +34,11 @@
 #include <libintl.h>
 
 #include "common.h"
-#include "../util.h"
 
-GtkWidget *intercombo;
-GtkWidget *viewif;
-GList *iflist=NULL;
-GList *interfaceslist=NULL;
+static GtkWidget *intercombo=NULL;
+static GtkWidget *viewif=NULL;
+static GList *iflist=NULL;
+static GList *interfaceslist=NULL;
 
 enum
 {
@@ -134,7 +133,7 @@ char *ask_nettype()
 	GtkTreeIter iter;
 	GtkTreeModel *model;
 	
-	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Select network type",
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Select network type"),
 			GTK_WINDOW(assistant),
 			GTK_DIALOG_MODAL,
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -180,7 +179,7 @@ int configure_wireless(fwnet_interface_t *interface)
 	extern GtkWidget *assistant;
 	GtkWidget *phboxtemp, *labeltemp;
 
-	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Configure Wireless",
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Configure Wireless"),
 			GTK_WINDOW(assistant),
 			GTK_DIALOG_MODAL,
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -195,28 +194,28 @@ int configure_wireless(fwnet_interface_t *interface)
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("Essid : ");
+	labeltemp = gtk_label_new(_("Essid : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryEssid = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryEssid, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("WEP encryption key : ");
+	labeltemp = gtk_label_new(_("WEP encryption key : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryWepKey = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryWepKey, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("WPA encryption passphrase : ");
+	labeltemp = gtk_label_new(_("WPA encryption passphrase : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryWpaPass = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryWpaPass, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("WPA Driver : ");
+	labeltemp = gtk_label_new(_("WPA Driver : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryWpaDriver = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryWpaDriver, FALSE, FALSE, 0);
@@ -254,31 +253,31 @@ int configure_static(fwnet_interface_t *interface, GtkTreeIter iter)
 	char option[50];
 	char *ipaddr, *netmask, *gateway;
 
-	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Configure static network",
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Configure static network"),
 			GTK_WINDOW(assistant),
 			GTK_DIALOG_MODAL,
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
        			NULL);
 
-	GtkWidget *labelinfo = gtk_label_new(_("vnbbbbbbbbbbbbddfgfcf"));
+	GtkWidget *labelinfo = gtk_label_new(_("Enter static network parameters"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("IP Adress : ");
+	labeltemp = gtk_label_new(_("IP Address : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryIP = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryIP, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("Network Mask : ");
+	labeltemp = gtk_label_new(_("Network Mask : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryNetmask = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryNetmask, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("Gateway : ");
+	labeltemp = gtk_label_new(_("Gateway : "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *pEntryGateway = gtk_entry_new();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryGateway, FALSE, FALSE, 0);
@@ -362,7 +361,7 @@ int add_interface(GtkWidget *button, gpointer data)
 
 	if(strcmp(nettype, "lo") && fwnet_is_wireless_device(iface))
 	{
-		switch(fwife_question("Wireless extension detected : Configure wireless?"))
+		switch(fwife_question(_("Wireless extension detected : Configure wireless?")))
 					{
 						case GTK_RESPONSE_YES:
 							configure_wireless(newinterface);
@@ -454,46 +453,46 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NAME, NULL);
-	gtk_tree_view_column_set_title(col, "Device");
+	gtk_tree_view_column_set_title(col, _("Device"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_IP, NULL);
-	gtk_tree_view_column_set_title(col, "Ip Address");
+	gtk_tree_view_column_set_title(col, _("Ip Address"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NETMASK, NULL);
-	gtk_tree_view_column_set_title(col, "Netmask");
+	gtk_tree_view_column_set_title(col, _("Netmask"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_GATEWAY, NULL);
-	gtk_tree_view_column_set_title(col, "Gateway");
+	gtk_tree_view_column_set_title(col, _("Gateway"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NAMESERV, NULL);
-	gtk_tree_view_column_set_title(col, "DHCP Nameserver");
+	gtk_tree_view_column_set_title(col, _("DHCP Nameserver"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 	
 	gtk_box_pack_start(GTK_BOX(hboxview), viewif, TRUE, TRUE, 10);
 	gtk_box_pack_start(GTK_BOX(pVBox), hboxview, TRUE, TRUE, 10);
 	
-	pFrame = gtk_frame_new("Network configuration");
+	pFrame = gtk_frame_new(_("Network configuration"));
 	gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);
 	gtk_box_pack_start(GTK_BOX(pVBox), pFrame, FALSE, FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pHBoxFrame, FALSE, FALSE, 12);
 	
-	labeldesc = gtk_label_new("Interface :");
+	labeldesc = gtk_label_new(_("Interface :"));
 	gtk_box_pack_start(GTK_BOX(pHBoxFrame), labeldesc, FALSE, FALSE, 5);
 	
 	intercombo = gtk_combo_box_new_text();
@@ -503,7 +502,7 @@ GtkWidget *load_gtk_widget()
     	gtk_box_pack_start(GTK_BOX(pHBoxFrame), labelinfo, TRUE, TRUE, 0);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
-	labeltemp = gtk_label_new("Network configuration :   ");
+	labeltemp = gtk_label_new(_("Network configuration :   "));
 	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *btnsave = gtk_button_new_from_stock (GTK_STOCK_ADD);
 	gtk_box_pack_start(GTK_BOX(phboxtemp), btnsave, FALSE, FALSE, 10);
@@ -553,7 +552,7 @@ int run(GList **config)
 	{
 		newprofile->interfaces = g_list_append(newprofile->interfaces, (fwnet_interface_t *) g_list_nth_data(interfaceslist, i));
 	}
-	char *host = fwife_entry("Hostname", "Enter computer hostname :", NULL);
+	char *host = fwife_entry(_("Hostname"), _("Enter computer hostname :"), NULL);
 	fwnet_writeconfig(newprofile, host);
 	FREE(host);
 	return 0;

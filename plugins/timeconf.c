@@ -30,19 +30,18 @@
 #include <unistd.h>
 #include <libintl.h>
 
+#include "common.h"
+
 #define CLOCKFILE "/etc/hardwareclock"
 #define READZONE "/usr/share/zoneinfo/zone.tab"
 #define ZONEFILE "/etc/localtime" 
 
-#include "common.h"
-#include "../util.h"
+static GtkWidget *drawingmap=NULL;
+static GdkPixbuf *image=NULL;
+static GtkWidget *timeview=NULL;
+static GtkWidget *UTC=NULL;
 
-GtkWidget *drawingmap;
-GdkPixbuf *image=NULL;
-GtkWidget *timeview;
-GtkWidget *UTC;
-
-GList *zonetime = NULL;
+static GList *zonetime = NULL;
 
 enum
 {
@@ -372,14 +371,14 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
-	gtk_tree_view_column_set_title(col, "Continent/Main City");
+	gtk_tree_view_column_set_title(col, _("Continent/Main City"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, "Comments");
+	gtk_tree_view_column_set_title(col, _("Comments"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 	
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (timeview));
@@ -393,7 +392,7 @@ GtkWidget *load_gtk_widget()
 
 	gtk_box_pack_start(GTK_BOX(pVbox), pScrollbar, TRUE, TRUE, 0);
 
-	UTC = gtk_check_button_new_with_label("Use UTC/GMT time coordinates");
+	UTC = gtk_check_button_new_with_label(_("Use UTC/GMT time coordinates"));
 	gtk_box_pack_start(GTK_BOX (pVbox), UTC, FALSE, FALSE, 3);
 
 	return pVbox;

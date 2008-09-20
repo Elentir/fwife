@@ -193,7 +193,7 @@ void mouseconfig()
 	else
 	{
 		
-	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Mouse configuration",
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Mouse configuration"),
         				GTK_WINDOW(assistant),
         				GTK_DIALOG_MODAL,
         				GTK_STOCK_OK,GTK_RESPONSE_OK,

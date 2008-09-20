@@ -24,10 +24,9 @@
 #include <string.h>
 
 #include "common.h"
-#include "../util.h"
 
-GtkWidget *rootpass, *rootverify;
-GtkWidget *userorigimg;
+static GtkWidget *rootpass, *rootverify;
+static GtkWidget *userorigimg;
 
 enum
 {
@@ -146,20 +145,20 @@ void add_user (GtkWidget *widget, gpointer data)
     gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);
 
     /* Creation et insertion des elements contenus dans le deuxieme GtkFrame */
-    pLabel = gtk_label_new("Enter password :");
+    pLabel = gtk_label_new(_("Enter password :"));
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
     pEntryPass = gtk_entry_new();
     gtk_entry_set_visibility(GTK_ENTRY(pEntryPass), FALSE);
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryPass, TRUE, FALSE, 0);
 
-    pLabel = gtk_label_new("Re-enter password :");
+    pLabel = gtk_label_new(_("Re-enter password :"));
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
     pVerifyPass = gtk_entry_new();
     gtk_entry_set_visibility(GTK_ENTRY(pVerifyPass), FALSE);
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pVerifyPass, TRUE, FALSE, 0);
 
     /* Creation du troisieme GtkFrame */
-    pFrame = gtk_frame_new("Other (optionnal)");
+    pFrame = gtk_frame_new(_("Other (optionnal)"));
     gtk_box_pack_start(GTK_BOX(pVBox), pFrame, TRUE, FALSE, 5);
 
     /* Creation et insertion d une boite pour le troisieme GtkFrame */
@@ -167,12 +166,12 @@ void add_user (GtkWidget *widget, gpointer data)
     gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);
 
     /* Creation et insertion des elements contenus dans le troisieme GtkFrame */
-    pLabel = gtk_label_new("Shell");
+    pLabel = gtk_label_new(_("Shell"));
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
     pEntryShell = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryShell, TRUE, FALSE, 0);
 
-    pLabel = gtk_label_new("Home directory");
+    pLabel = gtk_label_new(_("Home directory"));
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
     pEntryHome = gtk_entry_new();
     gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryHome, TRUE, FALSE, 0);
@@ -287,7 +286,7 @@ GtkWidget *load_gtk_widget()
 	hbox = gtk_hbox_new(FALSE, 5);	
 
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), "<span face=\"Courier New\"><b>A litle bit help</b></span>\n");	
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>A litle bit help</b></span>\n"));	
 
 	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);
@@ -306,35 +305,35 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_NAME, NULL);
-	gtk_tree_view_column_set_title(col, "User");
+	gtk_tree_view_column_set_title(col, _("User"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_FULLNAME, NULL);
-	gtk_tree_view_column_set_title(col, "Full Name");
+	gtk_tree_view_column_set_title(col, _("Full Name"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_SHELL, NULL);
-	gtk_tree_view_column_set_title(col, "Shell");
+	gtk_tree_view_column_set_title(col, _("Shell"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_HOME, NULL);
-	gtk_tree_view_column_set_title(col, "Home");
+	gtk_tree_view_column_set_title(col, _("Home"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, FALSE);
 	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_USR_PASS, NULL);
-	gtk_tree_view_column_set_title(col, "Password");
+	gtk_tree_view_column_set_title(col, _("Password"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
@@ -364,8 +363,8 @@ GtkWidget *load_gtk_widget()
 	
 	hboxroot1 = gtk_hbox_new(FALSE, 5);
 	hboxroot2 = gtk_hbox_new(FALSE, 5);
-	rootlabel = gtk_label_new("Enter root password :  ");
-	verifylabel = gtk_label_new("Re-enter root password :  ");	
+	rootlabel = gtk_label_new(_("Enter root password :  "));
+	verifylabel = gtk_label_new(_("Re-enter root password :  "));	
 	
 	rootpass = gtk_entry_new();
 	gtk_entry_set_visibility(GTK_ENTRY(rootpass), FALSE);

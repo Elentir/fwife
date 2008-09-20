@@ -25,6 +25,7 @@
 #include <glib.h>
 
 #include "../setup.h"
+#include "../util.h"
 
 plugin_t *info();
 int prerun(GList **config);

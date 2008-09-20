@@ -29,11 +29,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-#include "../util.h"
 #include "common.h"
 
-GList *layoutl;
-GtkWidget *view;
+static GList *layoutl = NULL;
+static GtkWidget *viewlayout = NULL;
 
 plugin_t plugin =
 {
@@ -57,13 +56,6 @@ plugin_t *info()
 char *desc()
 {
 	return _("Selecting the keyboard map");
-}
-
-int sort_layouts(gconstpointer a, gconstpointer b)
-{
-	const char *pa = a;
-	const char *pb = b;
-	return (strcmp(pa, pb));
 }
 
 int find(char *dirname)
@@ -134,44 +126,44 @@ GtkWidget *load_gtk_widget()
 	}
 	//* Loads keymaps from file *//
 	find("/usr/share/keymaps/i386");
-	layoutl = g_list_sort(layoutl, sort_layouts);
+	layoutl = g_list_sort(layoutl, cmp_str);
 	
 	store = gtk_list_store_new(1, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
-	view = gtk_tree_view_new_with_model(model);
+	viewlayout = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
-	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
+	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(viewlayout), TRUE);
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(viewlayout), FALSE);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
 	gtk_tree_view_column_set_title(col, "Code");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
+	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);	
 	
 	for(i=0; i < g_list_length(layoutl); ++i) 
 	{		
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
+		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter);
 		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter,
+		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter,
 			0, (gchar*)g_list_nth_data(layoutl, i), -1);
 	}
 
-	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
+	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewlayout));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
       
         g_signal_connect (selection, "changed", G_CALLBACK (selection_changed),NULL);
 	
 	pScrollbar = gtk_scrolled_window_new(NULL, NULL);
 	
-	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), viewlayout);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	pvbox = gtk_vbox_new(FALSE, 5);
 
 	GtkWidget *labelhelp = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(labelhelp), "<span face=\"Courier New\"><b>Select your keybord layout to continue</b></span>\n");
+	gtk_label_set_markup(GTK_LABEL(labelhelp), _("<span face=\"Courier New\"><b>Select your keybord layout to continue</b></span>\n"));
 	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 6);
 	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 0);
 
@@ -185,8 +177,8 @@ int run(GList **config)
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;
 	char* selected;
-	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));	
-	model = gtk_tree_view_get_model(GTK_TREE_VIEW(GTK_TREE_VIEW(view)));
+	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(viewlayout));	
+	model = gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout));
 	
 	if(gtk_tree_selection_get_selected(selection, &model, &iter))
 	{

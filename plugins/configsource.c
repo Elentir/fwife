@@ -25,13 +25,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "../setup.h"
-#include "../util.h"
 #include "common.h"
 
-GList *mirrorlist = NULL;
+static GList *mirrorlist = NULL;
 
-GtkWidget *viewserver;
+static GtkWidget *viewserver;
 
 enum
 {
@@ -301,7 +299,7 @@ int prerun(GList **config)
 	int i;
 	gboolean checked;
 
-	switch(fwife_question("You need a net connexion running,\n do you want to configure your network?"))
+	switch(fwife_question(_("You need a net connexion running,\n do you want to configure your network?")))
 	{
 		case GTK_RESPONSE_YES:
 			fw_system_interactive("gnetconfig");

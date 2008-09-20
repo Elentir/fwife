@@ -30,11 +30,10 @@
 #include <libintl.h>
 
 #include "common.h"
-#include "../util.h"
 
 #define LANGSNUM 13
 
-GtkWidget *view;
+static GtkWidget *view;
 
 // all languages
 char *langs[] =
@@ -191,7 +190,6 @@ int run(GList **config)
 	else
 		selected = "en_US";	
 
-	// TODO : Useless, translation for gettext need to be do before loading plugins
 	setenv("LC_ALL", selected, 1);
 	setenv("LANG",   selected, 1);
 	setlocale(LC_ALL, selected);

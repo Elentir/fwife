@@ -29,10 +29,9 @@
 #include <pacman.h>
 
 #include "common.h"
-#include "../util.h"
 
-GtkWidget *progress;
-GtkWidget *labelpkg;
+static GtkWidget *progress;
+static GtkWidget *labelpkg;
 
 plugin_t plugin =
 {
@@ -263,7 +262,7 @@ int installpkgsnormal(GList *pkgs)
 		cmd = g_strdup_printf("pacman-g2 -S -r ./ --noconfirm %s", ptr);
 		fw_system(cmd);
 		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), percent);
-		main_text = g_strdup_printf("Downloading and installing %s...", ptr);
+		main_text = g_strdup_printf(_("Downloading and installing %s..."), ptr);
 		gtk_progress_bar_set_text (GTK_PROGRESS_BAR(progress), main_text);
 		
 		while (gtk_events_pending())
@@ -279,21 +278,9 @@ int installpkgsnormal(GList *pkgs)
 
 int prerun(GList **config)
 {
-	char *ptr;
-	//umount if mounted
-	ptr = g_strdup_printf("umount %s/proc", TARGETDIR);
-	fw_system(ptr);
-	FREE(ptr);
-	ptr = g_strdup_printf("umount %s/dev", TARGETDIR);
-	fw_system(ptr);
-	FREE(ptr);
-	ptr = g_strdup_printf("umount %s/sys", TARGETDIR);
-	fw_system(ptr);
-	FREE(ptr);
-
 	copyfile("/proc/mounts", "/etc/mtab");
 
-	installpkgs((GList*)data_get(*config, "packages"));
+	installpkgsnormal((GList*)data_get(*config, "packages"));
 	
 	set_page_completed();
 	return(0);

@@ -29,22 +29,20 @@
 #include <sys/mount.h>
 #include <gtk/gtk.h>
 
-#include "../setup.h"
-#include "../util.h"
 #include "common.h"
 
 //* Lists for preloading partition *//
-GList *parts=NULL;
-GList *allparts=NULL;
-GList *devs=NULL;
+static GList *parts=NULL;
+static GList *allparts=NULL;
+static GList *devs=NULL;
 
 //* Current root partition selected */
-GList* rootpart = NULL;
+static GList* rootpart = NULL;
 //* count swap partition number *//
-int nbswap = 0;
+static int nbswap = 0;
 
-GtkWidget *comboparts;
-GtkWidget *partview;
+static GtkWidget *comboparts = NULL;
+static GtkWidget *partview = NULL;
 
 enum 
 {
@@ -61,7 +59,6 @@ enum
   	MOUNT_COLUMN,
    	NUM_COLUMN
 };
-  	
 
 PedExceptionOption peh(PedException* ex)
 {

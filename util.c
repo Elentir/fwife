@@ -26,7 +26,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
-#include <linux/cdrom.h>
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -114,20 +113,6 @@ void data_put(GList **config, char *name, void *data)
 	dp->name = name;
 	dp->data = data;
 	(*config) = g_list_append((*config), dp);
-}
-
-int eject(char *dev, char *target)
-{
-	int fd;
-
-	umount2(target,MNT_FORCE);
-
-	if((fd = open(dev, O_RDONLY|O_NONBLOCK))==-1)
-		return(1);
-	if((ioctl(fd, CDROMEJECT)) == -1)
-		return(1);
-	close(fd);
-	return(0);
 }
 
 int copyfile(char *src, char *dest)

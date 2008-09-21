@@ -29,7 +29,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
-#include <linux/cdrom.h>
 #include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -61,7 +60,6 @@ char *gen_backtitle(char *section);
 data_t *data_new(void);
 void *data_get(GList *config, char *title);
 void data_put(GList **config, char *name, void *data);
-int eject(char *dev, char *target);
 int copyfile(char *src, char *dest);
 int exit_perform(void);
 int fw_system(char* cmd);

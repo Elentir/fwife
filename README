@@ -10,9 +10,6 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-Install plugin : -> Using libpacman doesn't work. (segfault). Currently, using pacman-g2 command!
-
-
 TODO :
 
 Plugins : -> Make help widget for each plugin
@@ -20,6 +17,7 @@ Plugins : -> Make help widget for each plugin
 Core:  -> Select language before loading gtk plugins (have a correct translation)
 
 Partdisk plugin : -> improve dialog box interface
+		  -> add msgbox when formatting
 	          -> add raid support
 
 Finish plugin : -> Remove dialogboxs, add interface?

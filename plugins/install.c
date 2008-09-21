@@ -33,6 +33,10 @@
 static GtkWidget *progress;
 static GtkWidget *labelpkg;
 
+float	rate;
+int	offset;
+char 	reponame[PM_DLFNM_LEN+1];
+
 plugin_t plugin =
 {
 	"install",
@@ -69,6 +73,33 @@ GtkWidget *load_gtk_widget()
 	return vbox;
 }
 
+int progress_update(PM_NETBUF *ctl, int xferred, void *arg)
+{
+	int		size;
+	int		per;
+	char *name = NULL, *ptr = NULL;
+		
+	while (gtk_events_pending())
+		gtk_main_iteration ();
+
+	ctl = NULL;
+	size = *(int*)arg;
+	per = ((float)(xferred+offset) / size) * 100;
+	name = strdup(reponame);
+	ptr = g_strdup_printf("Downloading %s ...", drop_version(name));
+	gtk_progress_bar_set_text (GTK_PROGRESS_BAR(progress), ptr);
+	if(per>=0 && per <=100)
+		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), (float)per/100);
+
+	FREE(ptr);
+	FREE(name);
+	
+	while (gtk_events_pending())
+		gtk_main_iteration ();
+
+	return 1;
+}
+
 void progress_install (unsigned char event, char *pkgname, int percent, int howmany, int remain)
 {
 	char *main_text = NULL;	
@@ -83,7 +114,7 @@ void progress_install (unsigned char event, char *pkgname, int percent, int howm
 	switch (event)
 	{
 		case PM_TRANS_PROGRESS_ADD_START:
-			main_text = g_strdup (_("Installing packages..."));
+			main_text = g_strdup_printf(_("Installing packages... (%d/%d)"),remain, howmany);
 			break;
 		case PM_TRANS_PROGRESS_UPGRADE_START:
 			main_text = g_strdup (_("Upgrading packages..."));
@@ -92,7 +123,7 @@ void progress_install (unsigned char event, char *pkgname, int percent, int howm
 			main_text = g_strdup (_("Removing packages..."));
 			break;
 		case PM_TRANS_PROGRESS_CONFLICTS_START:
-				main_text = g_strdup (_("Checking packages for file conflicts..."));			
+			main_text = g_strdup (_("Checking packages for file conflicts..."));			
 			break;
 		default:
 			return;
@@ -139,7 +170,7 @@ void progress_event (unsigned char event, void *data1, void *data2)
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_VERSION));			
 			break;
 		case PM_TRANS_EVT_ADD_DONE:
-			substr = g_strdup_printf (_("Installed %s-%s"),
+			substr = g_strdup_printf (_("Packet %s-%s installed"),
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_NAME),
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_VERSION));
 			break;
@@ -186,7 +217,7 @@ int installpkgs(GList *pkgs)
 	int i = 0;
 	PM_LIST *pdata = NULL, *pkgsl;	
 	char *ptr;
-	
+			
 	if(pacman_initialize(TARGETDIR) == -1) {
 		printf("failed to initialize pacman library (%s)\n", pacman_strerror(pm_errno));
 	}
@@ -197,10 +228,10 @@ int installpkgs(GList *pkgs)
 	}
 	pacman_set_option(PM_OPT_LOGMASK, -1);
 	pacman_set_option(PM_OPT_LOGCB, (long)cb_log);
-	/*pacman_set_option (PM_OPT_DLCB, (long)progress_update);
+	pacman_set_option (PM_OPT_DLCB, (long)progress_update);
 	pacman_set_option (PM_OPT_DLOFFSET, (long)&offset);
 	pacman_set_option (PM_OPT_DLRATE, (long)&rate);
-	pacman_set_option (PM_OPT_DLFNM, (long)reponame);*/
+	pacman_set_option (PM_OPT_DLFNM, (long)reponame);
 	
 	PM_DB *db_local = pacman_db_register("local");
 	if(db_local == NULL) {
@@ -246,41 +277,11 @@ int installpkgs(GList *pkgs)
 	return 0;	
 }
 
-int installpkgsnormal(GList *pkgs)
-{
-	float percent = 0.0;
-	int i;
-	char *cmd, *ptr, *main_text;
-
-	while (gtk_events_pending())
-			gtk_main_iteration ();
-	
-	for(i=0; i<g_list_length(pkgs); i++)
-	{
-		percent += 1.0/g_list_length(pkgs);
-		ptr = drop_version((char*) g_list_nth_data(pkgs, i));
-		cmd = g_strdup_printf("pacman-g2 -S -r ./ --noconfirm %s", ptr);
-		fw_system(cmd);
-		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), percent);
-		main_text = g_strdup_printf(_("Downloading and installing %s..."), ptr);
-		gtk_progress_bar_set_text (GTK_PROGRESS_BAR(progress), main_text);
-		
-		while (gtk_events_pending())
-			gtk_main_iteration ();
-
-		FREE(main_text);
-		FREE(cmd);		
-	}
-		
-	return 0;	
-}
-
-
 int prerun(GList **config)
 {
 	copyfile("/proc/mounts", "/etc/mtab");
 
-	installpkgsnormal((GList*)data_get(*config, "packages"));
+	installpkgs((GList*)data_get(*config, "packages"));
 	
 	set_page_completed();
 	return(0);

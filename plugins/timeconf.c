@@ -475,7 +475,7 @@ int run(GList **config)
 		  gtk_tree_model_get (model, &iter_parent, 0, &country, -1);			
 	  }
 		
-	  ptr = g_strdup_printf("%s/%s",country, city);
+	  ptr = g_strdup_printf("/usr/share/zoneinfo/%s/%s",country, city);
 	  if(ptr)
 		symlink(ptr, ZONEFILE);
 	  FREE(ptr);

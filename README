@@ -20,4 +20,6 @@ Partdisk plugin : -> improve dialog box interface
 		  -> add msgbox when formatting
 	          -> add raid support
 
+Netconf plugin : -> add dsl support
+
 Finish plugin : -> Remove dialogboxs, add interface?

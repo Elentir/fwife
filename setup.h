@@ -39,7 +39,11 @@
 #define PLUGINDIR "plugins"
 #define PACCONFPATH "/etc/pacman-g2/repos/"
 
+#ifndef STABLE
 #define PACCONF "frugalware-current"
+#else
+#define PACCONF "frugalware"
+#endif
 
 #define ARCH "i686"
 

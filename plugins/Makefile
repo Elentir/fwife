@@ -1,6 +1,6 @@
 CFLAGS += -g -Wall -Werror
 LDFLAGS += -lparted -ldl -lpacman -lvolume_id
-CFLAGS += -DGTK
+
 CFLAGS += $(shell pkg-config --cflags gtk+-2.0)
 LDFLAGS += $(shell pkg-config --libs gtk+-2.0)
 

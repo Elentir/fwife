@@ -334,6 +334,14 @@ int fwifetime_find()
     return EXIT_SUCCESS;
 }
 
+gboolean resize_cb (GtkWindow *window, GdkEvent *event, gpointer data)
+{
+	gint decal = (event->configure.width - gdk_pixbuf_get_width(image))/2;
+	gtk_box_set_child_packing(GTK_BOX(data), drawingmap, FALSE, TRUE, decal, GTK_PACK_START);
+	// continue signal propagation (TRUE for stopping)
+	return FALSE;
+} 
+
 GtkWidget *load_gtk_widget()
 {
 	GtkTreeStore *store;
@@ -343,6 +351,7 @@ GtkWidget *load_gtk_widget()
 	GtkCellRenderer *renderer;
 	GtkWidget *pVbox, *pScrollbar;
 	GtkWidget *hboximg;
+	extern GtkWidget *assistant;
 	
 	pVbox = gtk_vbox_new(FALSE, 5);	
 	hboximg = gtk_hbox_new(FALSE, 5);
@@ -352,14 +361,18 @@ GtkWidget *load_gtk_widget()
 	image = gdk_pixbuf_new_from_file("images/timemap.png", NULL);
 	gtk_widget_set_size_request(drawingmap, gdk_pixbuf_get_width(image), gdk_pixbuf_get_height(image));
 	
-	g_signal_connect(G_OBJECT(drawingmap),"expose_event", (GCallback)affiche_dessin, NULL);
+	g_signal_connect(G_OBJECT(drawingmap),"expose_event", (GCallback)affiche_dessin, NULL);	
 	
-	gtk_box_pack_start(GTK_BOX(hboximg), drawingmap, FALSE, TRUE, 150);
+	// drawing map need to be center manually
+	gint width, height;
+	gtk_widget_get_size_request(assistant, &width, &height);
+	gint decal = (width - gdk_pixbuf_get_width(image))/2;
+	
+	gtk_box_pack_start(GTK_BOX(hboximg), drawingmap, FALSE, TRUE, decal);
 	gtk_box_pack_start(GTK_BOX(pVbox), hboximg, FALSE, TRUE, 5);
-
-	//GtkWidget *separator = gtk_hseparator_new();
-	//gtk_box_pack_start (GTK_BOX (pVbox), separator, FALSE, FALSE, 5);
 	
+	g_signal_connect(G_OBJECT(assistant),"configure-event", (GCallback)resize_cb, hboximg);
+
 	store = gtk_tree_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
@@ -409,8 +422,7 @@ int prerun(GList **config)
 	GtkTreeModel *model = gtk_tree_view_get_model (treeview);	
 	char *country, *city, *elem;
 	
-	fwifetime_find();
-	
+	fwifetime_find();	
 		
 	if(zonetime)
 	{
@@ -429,7 +441,7 @@ int prerun(GList **config)
 					   0, country, -1);
 				gtk_tree_store_append(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &child_iter, &iter);
 				gtk_tree_store_set(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &child_iter,
-						0, city,1,(char*)g_list_nth_data(zonetime, i+3), -1);
+						0, city,1,_((char*)g_list_nth_data(zonetime, i+3)), -1);
 				
 			}
 			else
@@ -438,7 +450,7 @@ int prerun(GList **config)
 					return(-1); 				
 				gtk_tree_store_append(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &child_iter, &iter);
 				gtk_tree_store_set(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(timeview))), &child_iter,
-						0, city,1,(char*)g_list_nth_data(zonetime, i+3), -1);
+						0, city,1,_((char*)g_list_nth_data(zonetime, i+3)), -1);
 			}
 			FREE(country);
 			FREE(elem);

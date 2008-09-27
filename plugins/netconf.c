@@ -97,9 +97,7 @@ GtkWidget *getNettypeCombo()
 	char *types[] =
 	{
 		"dhcp", _("Use a DHCP server"),
-		"static", _("Use a static IP address"),
-		"dsl", _("DSL connection"),
-		"lo", _("No network - loopback connection only")
+		"static", _("Use a static IP address")
 	};
 	store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
 	combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
@@ -115,7 +113,7 @@ GtkWidget *getNettypeCombo()
 	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 1, NULL);
 	
 
-	for (i = 0; i < 8; i+=2)
+	for (i = 0; i < 4; i+=2)
 	{
 		gtk_list_store_append (store, &iter);
 		gtk_list_store_set (store, &iter, 0, types[i], 1, types[i+1], -1);
@@ -141,9 +139,8 @@ char *ask_nettype()
 
 	GtkWidget *labelinfo = gtk_label_new(_("Now we need to know how your machine connects to the network.\n"
 			"If you have an internal network card and an assigned IP address, gateway, and DNS, use 'static' "
-			"to enter these values.\n You may also use this if you have a DSL connection.\n"
+			"to enter these values.\n"
 			"If your IP address is assigned by a DHCP server (commonly used by cable modem services), select 'dhcp'. \n"
-			"If you just have a network card to connect directly to a DSL modem, then select 'dsl'. \n"
 			"Finally, if you do not have a network card, select the 'lo' choice. \n"));
 	
 	GtkWidget *combotype = getNettypeCombo();
@@ -185,12 +182,8 @@ int configure_wireless(fwnet_interface_t *interface)
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
        			NULL);
 
-	GtkWidget *labelinfo = gtk_label_new(_("Now we need to know how your machine connects to the network.\n"
-			"If you have an internal network card and an assigned IP address, gateway, and DNS, use 'static' "
-			"to enter these values.\n You may also use this if you have a DSL connection.\n"
-			"If your IP address is assigned by a DHCP server (commonly used by cable modem services), select 'dhcp'. \n"
-			"If you just have a network card to connect directly to a DSL modem, then select 'dsl'. \n"
-			"Finally, if you do not have a network card, select the 'lo' choice. \n"));
+	GtkWidget *labelinfo = gtk_label_new(_("Wirelles documentation here.\n"
+			"And description of all entrys! "));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
@@ -317,6 +310,104 @@ int configure_static(fwnet_interface_t *interface, GtkTreeIter iter)
 	return 0;
 }
 
+int dsl_config(fwnet_profile_t *profile)
+{
+	extern GtkWidget *assistant;
+	GtkWidget *phboxtemp, *labeltemp;
+	int i;
+	char *uname, *passwd, *passverify, *iface;
+	GtkTreeIter iter;
+	GtkTreeModel *model;
+
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Configure DSL connexion"),
+			GTK_WINDOW(assistant),
+			GTK_DIALOG_MODAL,
+      			GTK_STOCK_OK,GTK_RESPONSE_OK,
+			GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,
+       			NULL);
+
+	GtkWidget *labelinfo = gtk_label_new(_("Enter DSL parameters"));
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
+	
+	phboxtemp = gtk_hbox_new(FALSE, 0);
+	labeltemp = gtk_label_new(_("PPPOE username : "));
+	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
+	GtkWidget *pEntryName = gtk_entry_new();
+	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryName, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
+
+	phboxtemp = gtk_hbox_new(FALSE, 0);
+	labeltemp = gtk_label_new(_("PPPOE password : "));
+	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
+	GtkWidget *pEntryPass = gtk_entry_new();
+	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryPass, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
+
+	phboxtemp = gtk_hbox_new(FALSE, 0);
+	labeltemp = gtk_label_new(_("Re-enter PPPOE password : "));
+	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
+	GtkWidget *pEntryVerify = gtk_entry_new();
+	gtk_box_pack_start(GTK_BOX(phboxtemp), pEntryVerify, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
+
+	phboxtemp = gtk_hbox_new(FALSE, 0);
+	labeltemp = gtk_label_new(_("Associate with interface : "));
+	GtkWidget *intercombodsl = gtk_combo_box_new_text();
+	gtk_box_pack_start(GTK_BOX(phboxtemp), intercombodsl, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
+
+	if(iflist != NULL)
+	{
+		gtk_combo_box_append_text(GTK_COMBO_BOX(intercombodsl), "");
+		for(i=0; i<g_list_length(iflist); i+=2)
+		{
+			gtk_combo_box_append_text(GTK_COMBO_BOX(intercombodsl), (char*)g_list_nth_data(iflist, i));
+		}
+	}
+	
+	/* Affichage des elements de la boite de dialogue */
+	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
+
+	/* On lance la boite de dialogue et on recupere la reponse */
+	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
+	{
+		/* L utilisateur valide */
+		case GTK_RESPONSE_OK:
+			uname = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryName));
+			passwd = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryPass));
+			passverify = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryVerify));
+			
+			gtk_combo_box_get_active_iter(GTK_COMBO_BOX(intercombo), &iter);
+			model = gtk_combo_box_get_model(GTK_COMBO_BOX(intercombo));
+			gtk_tree_model_get (model, &iter, 0, &iface, -1);
+			
+			if(strcmp(passverify, passwd))
+			{
+				fwife_error("Passwords do not match! Retry");
+				gtk_widget_destroy(pBoite);
+				dsl_config(profile);
+				return 0;
+			}
+			else
+			{				
+				snprintf(profile->adsl_username, PATH_MAX, uname);
+				snprintf(profile->adsl_password, PATH_MAX, passwd);
+				if(strcmp(iface, ""))
+					snprintf(profile->adsl_interface, IF_NAMESIZE, iface);
+			}
+			break;
+			/* L utilisateur annule */
+		case GTK_RESPONSE_CANCEL:
+		case GTK_RESPONSE_NONE:
+		default:
+			break;
+	}
+
+	/* Destruction de la boite de dialogue */
+	gtk_widget_destroy(pBoite);
+	return 0;
+}
+
 int add_interface(GtkWidget *button, gpointer data)
 {
 	fwnet_interface_t *newinterface = NULL;
@@ -331,6 +422,16 @@ int add_interface(GtkWidget *button, gpointer data)
 	gtk_combo_box_get_active_iter(GTK_COMBO_BOX(intercombo), &iter);
 	model = gtk_combo_box_get_model(GTK_COMBO_BOX(intercombo));
 	gtk_tree_model_get (model, &iter, 0, &iface, -1);
+
+	int i;
+	for(i=0;i<g_list_length(interfaceslist); i+=2)
+	{
+		if(!strcmp((char*)g_list_nth_data(interfaceslist, i), iface))
+		{
+			fwife_error("This interface has been already configured!");
+			return -1;
+		}
+	}
 	
 	if((newinterface = (fwnet_interface_t*)malloc(sizeof(fwnet_interface_t))) == NULL)
 		return(-1);
@@ -390,11 +491,6 @@ int add_interface(GtkWidget *button, gpointer data)
 		configure_static(newinterface, iter);
 	}
 
-	/*if(!strcmp(nettype, "static"))
-		dsl_config(newprofile, 1);
-	if(!strcmp(nettype, "dsl"))
-		dsl_config(newprofile, 0);*/
-	
 	return 0;
 }
 
@@ -409,10 +505,10 @@ void del_interface(GtkWidget *button, gpointer data)
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {
   	  gtk_tree_model_get (model, &iter, 1, &nameif, -1);
-	  GList * elem = g_list_find_custom(iflist, (gconstpointer) nameif, cmp_str);
-    	  gint i = g_list_position(iflist, elem); 
-	  iflist =  g_list_delete_link (iflist, g_list_nth(iflist, i));
-	  iflist =  g_list_delete_link (iflist, g_list_nth(iflist, i));
+	  GList * elem = g_list_find_custom(interfaceslist, (gconstpointer) nameif, cmp_str);
+    	  gint i = g_list_position(interfaceslist, elem); 
+	  interfaceslist =  g_list_delete_link (interfaceslist, g_list_nth(interfaceslist, i));
+	  interfaceslist =  g_list_delete_link (interfaceslist, g_list_nth(interfaceslist, i));
 	 
      	  gtk_list_store_remove (GTK_LIST_STORE (model), &iter);
     	}	
@@ -534,23 +630,31 @@ int prerun(GList **config)
 	}
 	
 	gtk_combo_box_set_active (GTK_COMBO_BOX (intercombo), 0);
-		
+
 	return 0;
 }
 
 int run(GList **config)
 {
-	fwnet_profile_t *newprofile=NULL;
 	int i;	
-	chroot(TARGETDIR);
+	fwnet_profile_t *newprofile=NULL;
+
 	if((newprofile = (fwnet_profile_t*)malloc(sizeof(fwnet_profile_t))) == NULL)
 		return(1);
 	memset(newprofile, 0, sizeof(fwnet_profile_t));
-	
+		
 	sprintf(newprofile->name, "default");
 	for(i = 1; i<g_list_length(interfaceslist); i+=2)
 	{
 		newprofile->interfaces = g_list_append(newprofile->interfaces, (fwnet_interface_t *) g_list_nth_data(interfaceslist, i));
+	}
+	switch(fwife_question(_("Configure a DSL connexion now?")))
+	{
+		case GTK_RESPONSE_YES:
+			dsl_config(newprofile);
+		break;
+		case GTK_RESPONSE_NO:
+		break;
 	}
 	char *host = fwife_entry(_("Hostname"), _("Enter computer hostname :"), NULL);
 	fwnet_writeconfig(newprofile, host);

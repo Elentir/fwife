@@ -193,7 +193,7 @@ int run(GList **config)
 	setenv("LC_ALL", selected, 1);
 	setenv("LANG",   selected, 1);
 	setlocale(LC_ALL, selected);
-	bindtextdomain("setup", "/usr/share/locale");
+	bindtextdomain("fwife", "/usr/share/locale");
 	
 	if(!strcmp("en_US", selected))
 		setenv("CHARSET", "iso-8859-1", 1);

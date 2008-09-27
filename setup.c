@@ -53,7 +53,7 @@ int sort_plugins(gconstpointer a, gconstpointer b)
 }
 
 //* Open a file plugin and add it into list *//
-int setup_add_plugins(char *filename)
+int fwife_add_plugins(char *filename)
 {
     	void *handle;
 	void *(*infop) (void);
@@ -77,7 +77,7 @@ int setup_add_plugins(char *filename)
 }
 
 //* Find dynamic plugins and add them *//
-int setup_load_plugins(char *dirname)
+int fwife_load_plugins(char *dirname)
 {
     char *filename, *ext;
 	DIR *dir;
@@ -90,14 +90,16 @@ int setup_load_plugins(char *dirname)
 		perror(dirname);
 		return(1);
 	}
+	// remenber that asklang is now special plugin
 	while ((ent = readdir(dir)) != NULL)
 	{
 		filename = g_strdup_printf("%s/%s", dirname, ent->d_name);
 		if (!stat(filename, &statbuf) && S_ISREG(statbuf.st_mode) &&
 				(ext = strrchr(ent->d_name, '.')) != NULL)
-			if (!strcmp(ext, SHARED_LIB_EXT))
-				setup_add_plugins(filename);
+			if (!strcmp(ext, SHARED_LIB_EXT) && strcmp(ent->d_name, "asklang.so"))
+				fwife_add_plugins(filename);		
 		free(filename);
+
 	}
 	closedir(dir);
 	return(0);
@@ -117,15 +119,20 @@ int cleanup_plugins()
 	return(0);
 }
 
+void fwife_exit()
+{
+	FREE(pages);
+   	cleanup_plugins();
+   	gtk_main_quit();	
+}
+
 //* Dialog box for quit the installation *//
 void cancel_install(GtkWidget *w, gpointer user_data)
 {
    int result = fwife_question("Do you want to cancel frugalware installation?\n");
    if(result == GTK_RESPONSE_YES)
    {
-        FREE(pages);
-        cleanup_plugins();
-        gtk_main_quit();
+        fwife_exit();
    }   
     return;
 }
@@ -147,10 +154,8 @@ void close_install(GtkWidget *w, gpointer user_data)
    gtk_widget_show_all (dialog);
    gtk_dialog_run (GTK_DIALOG (dialog));
 
-   FREE(pages);
-   cleanup_plugins();
-   gtk_main_quit();
-   //fw_system_interactive("/sbin/reboot");
+   fwife_exit();
+   
    return;
 }
 
@@ -214,6 +219,62 @@ int show_help(GtkWidget *w, gpointer user_data)
 	return 0;
 }
 
+//* Asklang is now a special plugin loaded before all others plugins *//
+int ask_language()
+{
+	void *handle;
+	void *(*infop) (void);
+	
+	char *ptr = g_strdup_printf("%s/%s", PLUGINDIR, "asklang.so");
+	if ((handle = dlopen(ptr, RTLD_NOW)) == NULL)
+	{
+		fprintf(stderr, "%s", dlerror());
+		FREE(ptr);
+		return(1);
+	}
+	FREE(ptr);
+
+	if ((infop = dlsym(handle, "info")) == NULL)
+	{
+		fprintf(stderr, "%s", dlerror());
+		return(1);
+	}
+	plugin_t *pluginlang = infop();
+	pluginlang->handle = handle;
+	
+	GtkWidget *pBoite = gtk_dialog_new_with_buttons("Language selection (default : en_US)",
+			NULL,
+			GTK_DIALOG_MODAL,
+       			GTK_STOCK_OK,GTK_RESPONSE_OK,
+       			NULL);
+	gtk_widget_set_size_request (pBoite, 800, 600);
+	gtk_window_set_deletable ( GTK_WINDOW ( pBoite ), FALSE );
+
+	
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file ("images/headlogo.png", NULL);
+	if(!pixbuf) 
+	{
+		fprintf(stdout, "error message: can't load images/headlogo.png\n");
+	}
+	else
+	{
+		/* Set it as icon window */
+		gtk_window_set_icon(GTK_WINDOW (pBoite),pixbuf);
+	}
+	g_object_unref(pixbuf);
+
+	GtkWidget *langtab = pluginlang->load_gtk_widget();
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), langtab, TRUE, TRUE, 5);
+
+	gtk_widget_show_all(GTK_DIALOG(pBoite)->vbox);
+
+	gtk_dialog_run(GTK_DIALOG(pBoite));
+	pluginlang->run(&config);
+	gtk_widget_destroy(pBoite);
+	return 0;
+}
+
+
 int main (int argc, char *argv[])
 {
   int i;
@@ -223,9 +284,12 @@ int main (int argc, char *argv[])
   
   gtk_init (&argc, &argv);
 
+  ask_language();
+
   /* Create a new assistant widget with no pages. */
   assistant = gtk_assistant_new ();
   gtk_widget_set_size_request (assistant, 800, 600);
+  //gtk_window_unfullscreen (GTK_WINDOW (assistant));
   gtk_window_set_title (GTK_WINDOW (assistant), _("Fwife : Frugalware Installer Front-End"));
 
   /* Connect signals with functions */
@@ -260,14 +324,12 @@ int main (int argc, char *argv[])
 
 
   /* Load plugins.... */
-  setup_load_plugins(PLUGINDIR);
+  fwife_load_plugins(PLUGINDIR);
 
   plugin_list = g_list_sort(plugin_list, sort_plugins);
 
   /*Allocate memory for stocking pages */
   MALLOC(pages, sizeof(PageInfo)*g_list_length(plugin_list));
-
-  // TODO : Change language before loading gtk_plugins 
 
   //* Initializing pages... *//
   for(i=0; i<g_list_length(plugin_list); i++)
@@ -303,50 +365,50 @@ int main (int argc, char *argv[])
 //* Just an error *//
 void fwife_error(char* error_str)
 {
-GtkWidget *error_dlg = NULL;
-if (!strlen(error_str))
-    return;
-error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
+	GtkWidget *error_dlg = NULL;
+
+	if (!strlen(error_str))
+    	return;
+	error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_ERROR,
                                          GTK_BUTTONS_OK,
                                          "%s",
                                          error_str);
 
-    gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+   	 gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+    	 gtk_window_set_title (GTK_WINDOW(error_dlg), _("Fwife error"));
 
-    gtk_dialog_run (GTK_DIALOG(error_dlg));
+   	 gtk_dialog_run (GTK_DIALOG(error_dlg));
 
-    gtk_widget_destroy (error_dlg); 
+    	gtk_widget_destroy (error_dlg); 
 
-    return;
+    	return;
 }
 
 //* Fatal error : quit fwife *//
 void fwife_fatal_error(char* error_str)
 {
-GtkWidget *error_dlg = NULL;
-if (!strlen(error_str))
-    return;
-error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
+	GtkWidget *error_dlg = NULL;
+	if (!strlen(error_str))
+	    return;
+	error_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
                                          GTK_MESSAGE_ERROR,
                                          GTK_BUTTONS_OK,
                                          "%s",
                                          error_str);
 
-    gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+    	gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
+    	gtk_window_set_title (GTK_WINDOW(error_dlg), "Fwife error");
 
-    gtk_dialog_run (GTK_DIALOG(error_dlg));
+	gtk_dialog_run (GTK_DIALOG(error_dlg));
 
-    gtk_widget_destroy (error_dlg);
+   	 gtk_widget_destroy (error_dlg);
     
-    //
-    FREE(pages);
-    cleanup_plugins();
-    gtk_main_quit();
+   	 fwife_exit();
 
-    return;
+    	return;
 }
 
 //* A basic question *//

@@ -1,25 +1,32 @@
 						Fwife : Frugalware Installer Frontend Readme
 
-Fwife 0.1 alpha
+Fwife 0.1 beta
 
-Warning : Alpha version - Core works but plugins aren't finished. Many bugs, segfaults and memory leaks are possible.
+Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for test only.
 
-This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for fwlive. I will see after for a local version. Any suggestion and patchs are welcome.
+This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for fwlive. I will see after for a local version.
 
 Knows Bugs : 
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
+Layout plugin : -> graphical bug when layout plugin is loaded before configsource plugin (remove button in configsource plugin isn't show!) (why??) (plugins priorities are inversed for the moment)
+
+General : -> Some stock icons are not loaded in configuration part when gtk is not installed on target (due to chroot()).
+
 TODO :
 
-Plugins : -> Make help widget for each plugin
+Partdisk plugin : -> add raid support
 
-Core:  -> Select language before loading gtk plugins (have a correct translation)
+General : -> Verify C code, remove useless parts, simplify code if possible !
 
-Partdisk plugin : -> improve dialog box interface
-		  -> add msgbox when formatting
-	          -> add raid support
+Ideas :
 
-Netconf plugin : -> add dsl support
+-> Made new configuration plugin for selecting default desktop manager (xdm, gdm, kdm) and default window manager
+-> Improve interface (dialogbox for exemple)
+-> Improve help (add tooltip text, etc...)
 
-Finish plugin : -> Remove dialogboxs, add interface?
+Text (dialogbox, labels, help widget) need to be write/rewrite with a correct english :p
+
+Any suggestions or patchs are welcome ;)
+

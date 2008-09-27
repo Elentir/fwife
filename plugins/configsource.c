@@ -43,7 +43,7 @@ plugin_t plugin =
 {
 	"configsource",	
 	desc,
-	20,
+	15,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
@@ -266,29 +266,47 @@ GtkWidget *mirrorview()
 
 GtkWidget *load_gtk_widget()
 {	
-	GtkWidget *button, *pScrollbar;
+	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
+	GtkWidget *addmirror, *delmirror, *buttonlist;
+	GtkWidget *image;
+
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
-	GtkWidget *pHBox = gtk_hbox_new(FALSE, 5);
-	
+	GtkWidget *phbox = gtk_hbox_new(FALSE, 5);
+		
 	// array of mirrors
 	viewserver = mirrorview();
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewserver));
-        gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);      
+        gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
         pScrollbar = gtk_scrolled_window_new(NULL, NULL);	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), viewserver);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	gtk_box_pack_start(GTK_BOX(pVBox), pScrollbar, TRUE, TRUE, 8);
+	gtk_box_pack_start (GTK_BOX (pVBox), pScrollbar, TRUE, TRUE, 5);
+		
+	buttonlist = gtk_hbox_new(TRUE, 10);
+			
+	//* Set buttons *//
+	addmirror = gtk_button_new_with_label(_("Add mirror"));
+	delmirror = gtk_button_new_with_label(_("Remove mirror"));
+		
+	//* Set images *//
+	image = gtk_image_new_from_stock (GTK_STOCK_ADD, 2);
+	gtk_button_set_image(GTK_BUTTON(addmirror), image);
+	image = gtk_image_new_from_stock (GTK_STOCK_CANCEL, 2);
+	gtk_button_set_image(GTK_BUTTON(delmirror), image);
+		
+	//* connect button to the select root part function *//
+	g_signal_connect (addmirror, "clicked",G_CALLBACK (add_mirror), viewserver);
+	g_signal_connect (delmirror, "clicked", G_CALLBACK (remove_mirror), viewserver);
+		
 	
-	gtk_box_pack_start(GTK_BOX(pVBox), pHBox, FALSE, FALSE, 5);
-	button = gtk_button_new_from_stock (GTK_STOCK_ADD );
-        g_signal_connect (button, "clicked", G_CALLBACK (add_mirror), viewserver);
-        gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);
+	//* Add them to the box *//
+	gtk_box_pack_start (GTK_BOX (buttonlist), addmirror, TRUE, FALSE, 10);	
+	gtk_box_pack_start (GTK_BOX (buttonlist), delmirror, TRUE, FALSE, 10);
+	gtk_box_pack_start (GTK_BOX (phbox), buttonlist, TRUE, FALSE, 5);
 
-        button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
-        g_signal_connect (button, "clicked", G_CALLBACK (remove_mirror), viewserver);
-        gtk_box_pack_start (GTK_BOX (pHBox), button, TRUE, FALSE, 0);
-
+	gtk_box_pack_start (GTK_BOX (pVBox), phbox, FALSE, FALSE, 5);
+	
 	return pVBox;
 }
 

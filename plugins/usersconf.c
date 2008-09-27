@@ -196,13 +196,13 @@ void add_user (GtkWidget *widget, gpointer data)
 	   
 	    //* Add user into the system *//
 	    if(!strlen(sShell) && !strlen(sHome))
-		    ptr = g_strdup_printf("/usr/sbin/useradd %s", sName);
+		    ptr = g_strdup_printf("/usr/sbin/useradd '%s'", sName);
 	    else if(!strlen(sShell))
-		    ptr = g_strdup_printf("/usr/sbin/useradd -d %s -m %s", sHome, sName);
+		    ptr = g_strdup_printf("/usr/sbin/useradd -d '%s' -m '%s'", sHome, sName);
 	    else if(!strlen(sHome))
-		    ptr = g_strdup_printf("/usr/sbin/useradd -s %s -m %s", sShell, sName);
+		    ptr = g_strdup_printf("/usr/sbin/useradd -s '%s' -m '%s'", sShell, sName);
 	    else
-		    ptr = g_strdup_printf("/usr/sbin/useradd -d %s -s %s -m %s", sHome, sShell, sName);
+		    ptr = g_strdup_printf("/usr/sbin/useradd -d '%s' -s '%s' -m '%s'", sHome, sShell, sName);
 	
 	    if(fw_system(ptr) != 0)
 	    {
@@ -222,7 +222,7 @@ void add_user (GtkWidget *widget, gpointer data)
 	    
 	    if(strlen(sFn))
 	    {
-		    ptr = g_strdup_printf("chfn -f %s %s", sFn, sName);
+		    ptr = g_strdup_printf("chfn -f '%s' '%s'", sFn, sName);
 		    fw_system(ptr);
 		    FREE(ptr);
 	    }

@@ -543,7 +543,6 @@ int requestformat(char *namedev)
 
 	gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
 
-	/* Creation de la zone de saisie */
 	GtkWidget *pVBox = GTK_DIALOG(pBoite)->vbox;
 		
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
@@ -619,6 +618,21 @@ int requestformat(char *namedev)
 		else
 		{
 			gboolean checked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+			// change label
+			gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! Creating filesystem... Please wait ... </b></span>\n"));
+			// hide all widgets
+			gtk_widget_hide(pLabel);
+			gtk_widget_hide(pLabel2);
+			gtk_widget_hide(pRadio1);
+			gtk_widget_hide(pRadio2);
+			gtk_widget_hide(pRadio3);
+			gtk_widget_hide(pRadio4);
+			gtk_widget_hide(pRadio5);
+			gtk_widget_hide(separator);
+			gtk_widget_hide(check);
+
+			while (gtk_events_pending())
+				gtk_main_iteration ();
 			//* if sucessfull, replace into glist and update treeview *//
 			if(mkfss(namedev, sLabel, checked) == 0)
 			{

@@ -31,7 +31,7 @@ plugin_t plugin =
 	desc,
 	10,
 	load_gtk_widget,
-	GTK_ASSISTANT_PAGE_CONTENT,
+	GTK_ASSISTANT_PAGE_INTRO,
 	TRUE,
 	NULL,
 	NULL,

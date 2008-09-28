@@ -2,7 +2,7 @@
 
 Fwife 0.1 beta
 
-Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for test only.
+Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
 
 This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for fwlive. I will see after for a local version.
 
@@ -23,10 +23,12 @@ General : -> Verify C code, remove useless parts, simplify code if possible !
 Ideas :
 
 -> Made new configuration plugin for selecting default desktop manager (xdm, gdm, kdm) and default window manager
--> Improve interface (dialogbox for exemple)
+-> Improve gui (dialogbox for exemple)
 -> Improve help (add tooltip text, etc...)
 
 Text (dialogbox, labels, help widget) need to be write/rewrite with a good english :p
+
+Compiling and testing : Just do a 'make' in source directory then do './fwife' :p
 
 Any suggestions or patchs are welcome ;)
 

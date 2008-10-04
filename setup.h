@@ -29,7 +29,7 @@
 #include "util.h"
 
 #define LOGDEV "/dev/tty4"
-#define LOGFILE "/var/log/setup.log"
+#define LOGFILE "/var/log/fwife.log"
 #define SOURCEDIR "/mnt/source"
 #define TARGETDIR "/mnt/target"
 

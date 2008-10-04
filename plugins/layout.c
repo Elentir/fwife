@@ -38,7 +38,7 @@ plugin_t plugin =
 {
 	"layout",
 	desc,
-	20,
+	15,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	FALSE,

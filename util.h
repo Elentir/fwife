@@ -55,8 +55,6 @@ typedef struct
 	void *data;
 } data_t;
 
-char *get_version(void);
-char *gen_backtitle(char *section);
 data_t *data_new(void);
 void *data_get(GList *config, char *title);
 void data_put(GList **config, char *name, void *data);

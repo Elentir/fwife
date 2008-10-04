@@ -10,8 +10,6 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-Layout plugin : -> graphical bug when layout plugin is loaded before configsource plugin (remove button in configsource plugin isn't show!) (why??) (plugins priorities are inversed for the moment)
-
 General : -> Some stock icons are not loaded in configuration part when gtk is not installed on target (due to chroot()).
 
 TODO :

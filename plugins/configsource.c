@@ -43,7 +43,7 @@ plugin_t plugin =
 {
 	"configsource",	
 	desc,
-	15,
+	20,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
@@ -272,8 +272,7 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *image;
 
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
-	GtkWidget *phbox = gtk_hbox_new(FALSE, 5);
-		
+			
 	// array of mirrors
 	viewserver = mirrorview();
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewserver));
@@ -287,6 +286,8 @@ GtkWidget *load_gtk_widget()
 			
 	//* Set buttons *//
 	addmirror = gtk_button_new_with_label(_("Add mirror"));
+	//* TODO : Fix it : need 2 creation to be show lol (why???) *//
+	delmirror = gtk_button_new_with_label(NULL);
 	delmirror = gtk_button_new_with_label(_("Remove mirror"));
 		
 	//* Set images *//
@@ -303,9 +304,8 @@ GtkWidget *load_gtk_widget()
 	//* Add them to the box *//
 	gtk_box_pack_start (GTK_BOX (buttonlist), addmirror, TRUE, FALSE, 10);	
 	gtk_box_pack_start (GTK_BOX (buttonlist), delmirror, TRUE, FALSE, 10);
-	gtk_box_pack_start (GTK_BOX (phbox), buttonlist, TRUE, FALSE, 5);
-
-	gtk_box_pack_start (GTK_BOX (pVBox), phbox, FALSE, FALSE, 5);
+	
+	gtk_box_pack_start (GTK_BOX (pVBox), buttonlist, FALSE, FALSE, 5);
 	
 	return pVBox;
 }

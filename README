@@ -4,7 +4,7 @@ Fwife 0.1 beta
 
 Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
 
-This version of Fwife do not included the ncurse version of frugalware installer. A common version is possible to do because many parts of the code is re-used. This version only support netinstall because it's necessary for fwlive. I will see after for a local version.
+This version only support netinstall because it's necessary for fwlive. I will see after for a local version.
 
 Knows Bugs : 
 

@@ -720,7 +720,7 @@ int swapformat(char *namedev)
 		case GTK_RESPONSE_NONE:
 		default:
 			gtk_widget_destroy(pBoite);
-			return 1;
+			return (-1);
 			break;
 	}
 	gtk_widget_destroy(pBoite);

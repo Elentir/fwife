@@ -30,6 +30,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <libintl.h>
 
@@ -636,7 +637,7 @@ int prerun(GList **config)
 
 int run(GList **config)
 {
-	int i;	
+	int i, ret;	
 	fwnet_profile_t *newprofile=NULL;
 
 	if((newprofile = (fwnet_profile_t*)malloc(sizeof(fwnet_profile_t))) == NULL)
@@ -657,7 +658,22 @@ int run(GList **config)
 		break;
 	}
 	char *host = fwife_entry(_("Hostname"), _("Enter computer hostname :"), NULL);
-	fwnet_writeconfig(newprofile, host);
+
+	pid_t pid = fork();
+
+	if(pid == -1)
+		LOG("Error when forking process in grubconf plugin.");
+	else if(pid == 0)
+	{
+		chroot(TARGETDIR);
+		fwnet_writeconfig(newprofile, host);
+		exit(0);
+	}
+	else
+	{
+		wait(&ret);
+	}
+	
 	FREE(host);
 	return 0;
 }

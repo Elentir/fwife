@@ -140,20 +140,7 @@ void cancel_install(GtkWidget *w, gpointer user_data)
 //* Dialog Box when instllation finished *//
 void close_install(GtkWidget *w, gpointer user_data)
 {
-   GtkWidget *dialog, *label;
-
-   dialog = gtk_dialog_new_with_buttons(_("Installation completed"),
-                                        GTK_WINDOW(assistant),
-                                        GTK_DIALOG_MODAL,
-                                        GTK_STOCK_OK,
-                                        GTK_RESPONSE_ACCEPT,
-                                        NULL);
-   label = gtk_label_new (_("Frugalware installation was sucessfully completed!\n\nYou can reboot your computer..."));
-
-   gtk_container_add (GTK_CONTAINER (GTK_DIALOG(dialog)->vbox), label);
-   gtk_widget_show_all (dialog);
-   gtk_dialog_run (GTK_DIALOG (dialog));
-
+   fwife_info("Frugalware installation completed.\nYou can now reboot your computer");
    fwife_exit();
    
    return;
@@ -385,6 +372,30 @@ void fwife_error(char* error_str)
 
     	return;
 }
+
+void fwife_info(char *info_str)
+{
+	GtkWidget *info_dlg = NULL;
+
+	if (!strlen(info_str))
+    		return;
+	info_dlg = gtk_message_dialog_new (GTK_WINDOW(assistant),
+        					GTK_DIALOG_DESTROY_WITH_PARENT,
+       						GTK_MESSAGE_INFO,
+        					GTK_BUTTONS_OK,
+        					"%s",
+        					info_str);
+
+   	 gtk_window_set_resizable (GTK_WINDOW(info_dlg), FALSE);
+    	 gtk_window_set_title (GTK_WINDOW(info_dlg), _("Fwife information"));
+
+   	 gtk_dialog_run (GTK_DIALOG(info_dlg));
+
+    	gtk_widget_destroy (info_dlg); 
+
+    	return;
+}
+
 
 //* Fatal error : quit fwife *//
 void fwife_fatal_error(char* error_str)

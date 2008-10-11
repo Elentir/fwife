@@ -28,6 +28,7 @@
 #include <libfwxconfig.h>
 #include <libfwmouseconfig.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <libintl.h>
 #include <dialog.h>
@@ -181,6 +182,7 @@ void change_mouse(GtkComboBox *combo, gpointer data)
 void mouseconfig()
 {
 	char *mouse_type=NULL, *mtype=NULL, *link=NULL;
+	int ret;
 	extern GtkWidget *assistant;
 	GtkTreeIter iter;
 	GtkTreeModel *model;
@@ -284,8 +286,23 @@ void mouseconfig()
     		}
 		gtk_widget_destroy(pBoite);
 	}  
-	if(link && mtype)
-		fwmouse_writeconfig(link, mtype);
+	
+	pid_t pid = fork();
+
+	if(pid == -1)
+		LOG("Error when forking process in mouse config.");
+	else if(pid == 0)
+	{
+		chroot(TARGETDIR);
+		
+		if(link && mtype)
+			fwmouse_writeconfig(link, mtype);
+		exit(0);
+	}
+	else
+	{
+		wait(&ret);
+	}
 
 	FREE(link);
 	FREE(mtype);
@@ -293,46 +310,69 @@ void mouseconfig()
 
 int xconfig()
 {
-	char *mdev, *res=NULL, *depth=NULL;
+	char *mdev, *res=NULL, *depth=NULL, *ptr;
 	struct stat buf;
-	int needrelease;
+	int needrelease, ret;
 
-	if(stat("/usr/bin/xinit", &buf))
+	ptr = g_strdup_printf("%s/usr/bin/xinit", TARGETDIR);
+	if(stat(ptr, &buf))
 	{
-		fwife_error("xinit missing");
+		LOG("Xconfig : xinit missing");
 		return(-1);
 	}
+	FREE(ptr);
 
-	if(stat("/usr/bin/xmessage", &buf))
+	ptr = g_strdup_printf("%s/usr/bin/xmessage", TARGETDIR);
+	if(stat(ptr, &buf))
 	{
-		fwife_error("xmessage missing");
+		LOG("Xconfig : xmessage missing");
 		return(-1);
 	}
-
-	if(stat("/usr/bin/xsetroot", &buf))
-	{
-		fwife_error("xsetroot missing");
-		return(-1);
-	}
-
-	needrelease = fwutil_init();
-	mdev = fwx_get_mousedev();
-
-	if(fwx_doprobe())
-	{
-		if(needrelease)
-			fwutil_release();
-		return(-1);
-	}
+	FREE(ptr);
 	
+	ptr = g_strdup_printf("%s/usr/bin/xsetroot", TARGETDIR);
+	if(stat(ptr, &buf))
+	{
+		LOG("Xconfig : xsetroot missing");
+		return(-1);
+	}
+	FREE(ptr);
+
 	res = fwife_entry(_("Selecting resolution"),
 		_("Please enter the screen resolution you want to use.\nYou can use values such as 1024x768, 800x600 or 640x480.\n If unsure, just press ENTER."),
 		"1024x768");
 	depth = fwife_entry(_("Selecting color depth"),
 		_("Please enter the color depth you want to use.\n If unsure, just press ENTER."),
 		"24");
-	fwx_doconfig(mdev, res, depth);	
-	unlink("/root/xorg.conf.new");
+
+	pid_t pid = fork();
+
+	if(pid == -1)
+		LOG("Error when forking process (X11 config)");
+	else if (pid == 0)
+	{
+		chroot(TARGETDIR);
+		needrelease = fwutil_init();
+		mdev = fwx_get_mousedev();
+
+		if(fwx_doprobe())
+		{
+			if(needrelease)
+				fwutil_release();
+			exit(-1);
+		}
+	
+	
+		fwx_doconfig(mdev, res, depth);	
+		unlink("/root/xorg.conf.new");
+		exit(0);
+	}
+	else
+	{
+		wait(&ret);
+		if(ret != 0)
+			return -1;
+	}
 	
 	FREE(res);
 	FREE(depth);
@@ -343,28 +383,23 @@ int xconfig()
 int prerun(GList **config)
 {
 	struct stat buf;
+	char *ptr;
 
 	// configure kernel modules	
-	fw_system("/sbin/depmod -a");
+	ptr = g_strdup_printf("chroot %s /sbin/depmod -a", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
 
 	//* Mouse configuration *//
 	mouseconfig();
 
-	if(!stat("usr/bin/X", &buf))
+	ptr = g_strdup_printf("%s/usr/bin/X", TARGETDIR);
+	if(!stat(ptr, &buf))
 	{
 		if(xconfig() == -1)
-			fwife_error("Error when trying to configure X11 server");
+			fwife_error(_("Error when configuring X11."));
 	}
-
-	char *ptr = strdup("umount /sys");
-	fw_system(ptr);
-	FREE(ptr);
-	ptr = strdup("umount /proc");
-	fw_system(ptr);
-	FREE(ptr);
-	ptr = strdup("umount /dev");
-	fw_system(ptr);
-	FREE(ptr);
+	
 	return 0;
 }
 

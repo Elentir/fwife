@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <libintl.h>
+#include <sys/wait.h>
 
 #include "common.h"
 
@@ -45,8 +46,7 @@ static GList *zonetime = NULL;
 
 enum
 {
-	COLUMN_TIME_CODE,
- 	COLUMN_TIME_NAME,
+	COLUMN_TIME_NAME,
  	COLUMN_TIME_COMMENT
 };
 
@@ -168,7 +168,7 @@ GtkTreePath *find_country_path(char *country)
 	{
 		do
 		{
-			gtk_tree_model_get (model, &iter, 0, &name, -1);
+			gtk_tree_model_get (model, &iter, COLUMN_TIME_NAME, &name, -1);
 			if(!strcmp(country, name))
 				return(gtk_tree_model_get_path(model, &iter));
 			
@@ -256,7 +256,7 @@ gboolean affiche_dessin(GtkWidget *dessin, GdkEventExpose *event, gpointer data)
   		
 	if (gtk_tree_selection_get_selected (selection, &model, &iter))
 	{
-		gtk_tree_model_get (model, &iter, 0, &city, -1);
+		gtk_tree_model_get (model, &iter, COLUMN_TIME_NAME, &city, -1);
 					
 		if(gtk_tree_model_iter_parent(model, &iter_parent, &iter) == FALSE)
 		{	
@@ -266,7 +266,7 @@ gboolean affiche_dessin(GtkWidget *dessin, GdkEventExpose *event, gpointer data)
 		}
 		else
 		{
-			gtk_tree_model_get (model, &iter_parent, 0, &country, -1);			
+			gtk_tree_model_get (model, &iter_parent, COLUMN_TIME_NAME, &country, -1);			
 		}
 		
 		char *total = g_strdup_printf("%s/%s",country, city);
@@ -383,14 +383,14 @@ GtkWidget *load_gtk_widget()
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_TIME_NAME, NULL);
 	gtk_tree_view_column_set_title(col, _("Continent/Main City"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
+	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_TIME_COMMENT, NULL);
 	gtk_tree_view_column_set_title(col, _("Comments"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(timeview), col);
 	
@@ -462,36 +462,53 @@ int prerun(GList **config)
 
 int run(GList **config)
 {
+	int ret;
 	char* city = NULL, *country = NULL, *ptr=NULL;
 	GtkTreeIter iter, iter_parent;
   	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(timeview));
   	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(timeview));
-
+	
 	gboolean utcchecked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(UTC));
-	if(utcchecked == TRUE)
-		fwtime_hwclockconf(CLOCKFILE, "UTC");
-	else
-		fwtime_hwclockconf(CLOCKFILE, "localtime");
-
-  	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
-        {
-  	  gtk_tree_model_get (model, &iter, 0, &city, -1);
+	
+	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
+	{
+		gtk_tree_model_get (model, &iter, COLUMN_TIME_NAME, &city, -1);
 	  
 					
-	  if(gtk_tree_model_iter_parent(model, &iter_parent, &iter) == FALSE)
-	  {	
-		 return(-1);
-	  }
-	  else
-	  {
-		  gtk_tree_model_get (model, &iter_parent, 0, &country, -1);			
-	  }
+		if(gtk_tree_model_iter_parent(model, &iter_parent, &iter) == FALSE)
+		{	
+			return(-1);
+		}
+		else
+		{
+			gtk_tree_model_get (model, &iter_parent, COLUMN_TIME_NAME, &country, -1);			
+		}		
+	}
+	
+	pid_t pid = fork();
+
+	if(pid == -1)
+		LOG("Error when forking process in grubconf plugin.");
+	else if(pid == 0)
+	{
+		chroot(TARGETDIR);	
 		
-	  ptr = g_strdup_printf("/usr/share/zoneinfo/%s/%s",country, city);
-	  if(ptr)
-		symlink(ptr, ZONEFILE);
-	  FREE(ptr);
+		if(utcchecked == TRUE)
+			fwtime_hwclockconf(CLOCKFILE, "UTC");
+		else
+			fwtime_hwclockconf(CLOCKFILE, "localtime");
+		
+		ptr = g_strdup_printf("/usr/share/zoneinfo/%s/%s",country, city);
+		if(ptr)
+			symlink(ptr, ZONEFILE);
+		FREE(ptr);
+		exit(0);
     	 }
+	 else
+	 {
+		 wait(&ret);
+	 }
+	 
 	return 0;
 }
 

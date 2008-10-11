@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <libintl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <libfwgrubconfig.h>
 #include <libfwutil.h>
@@ -99,6 +101,7 @@ int run(GList **config)
 	GSList *pList;
 	const char *sLabel;
 	int mode, needrelease;
+	int ret;
 	FILE *fp;
 	struct stat buf;	
 	
@@ -129,24 +132,39 @@ int run(GList **config)
 		mode = 2;
 	else
 		mode = 3;
-	
-	//* Install grub and menu *//
-	if(mode!=3)
+
+	pid_t pid = fork();
+
+	if(pid == -1)
+		LOG("Error when forking process in grubconf plugin.");
+	else if(pid == 0)
 	{
-		needrelease = fwutil_init();
-		fwgrub_install(mode);
-		// backup the old config if there is any
-		if(!stat("/boot/grub/menu.lst", &buf))
-			rename("/boot/grub/menu.lst", "/boot/grub/menu.lst.old");
-		fp = fopen("/boot/grub/menu.lst", "w");
-		if(fp)
+		chroot(TARGETDIR);
+	
+		//* Install grub and menu *//
+		if(mode!=3)
 		{
-			fwgrub_create_menu(fp);
-			fclose(fp);
+			needrelease = fwutil_init();
+			fwgrub_install(mode);
+			// backup the old config if there is any
+			if(!stat("/boot/grub/menu.lst", &buf))
+				rename("/boot/grub/menu.lst", "/boot/grub/menu.lst.old");
+			fp = fopen("/boot/grub/menu.lst", "w");
+			if(fp)
+			{
+				fwgrub_create_menu(fp);
+				fclose(fp);
+			}
+			if(needrelease)
+				fwutil_release();
 		}
-		if(needrelease)
-			fwutil_release();
+		exit(0);
 	}
+	else
+	{
+		wait(&ret);
+	}
+	
 	return 0;
 }
 

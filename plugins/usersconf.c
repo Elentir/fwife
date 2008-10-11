@@ -73,7 +73,7 @@ void remove_user (GtkWidget *widget, gpointer data)
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {
 		gtk_tree_model_get (model, &iter, COLUMN_USR_NAME, &old_name, -1);
-		ptr = g_strdup_printf("/usr/sbin/userdel %s", old_name);
+		ptr = g_strdup_printf("chroot %s /usr/sbin/userdel %s", TARGETDIR, old_name);
 		if(fw_system(ptr) != 0)
 		{
 			fwife_error(_("A user can be deleted!"));
@@ -196,13 +196,13 @@ void add_user (GtkWidget *widget, gpointer data)
 	   
 	    //* Add user into the system *//
 	    if(!strlen(sShell) && !strlen(sHome))
-		    ptr = g_strdup_printf("/usr/sbin/useradd '%s'", sName);
+		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd '%s'", TARGETDIR, sName);
 	    else if(!strlen(sShell))
-		    ptr = g_strdup_printf("/usr/sbin/useradd -d '%s' -m '%s'", sHome, sName);
+		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd -d '%s' -m '%s'", TARGETDIR, sHome, sName);
 	    else if(!strlen(sHome))
-		    ptr = g_strdup_printf("/usr/sbin/useradd -s '%s' -m '%s'", sShell, sName);
+		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd -s '%s' -m '%s'", TARGETDIR, sShell, sName);
 	    else
-		    ptr = g_strdup_printf("/usr/sbin/useradd -d '%s' -s '%s' -m '%s'", sHome, sShell, sName);
+		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd -d '%s' -s '%s' -m '%s'", TARGETDIR, sHome, sShell, sName);
 	
 	    if(fw_system(ptr) != 0)
 	    {
@@ -215,14 +215,14 @@ void add_user (GtkWidget *widget, gpointer data)
 	   
 	    if(strlen(sPass))
 	    {
-		    ptr = g_strdup_printf("echo '%s:%s' |/usr/sbin/chpasswd", sName, sPass);
+		    ptr = g_strdup_printf("echo '%s:%s' |chroot %s /usr/sbin/chpasswd", sName, sPass, TARGETDIR);
 		    fw_system(ptr);
 		    FREE(ptr);
 	    }
 	    
 	    if(strlen(sFn))
 	    {
-		    ptr = g_strdup_printf("chfn -f '%s' '%s'", sFn, sName);
+		    ptr = g_strdup_printf("chroot %s chfn -f '%s' '%s'", TARGETDIR, sFn, sName);
 		    fw_system(ptr);
 		    FREE(ptr);
 	    }
@@ -394,7 +394,7 @@ int run(GList **config)
 	pass = strdup((char*)gtk_entry_get_text(GTK_ENTRY(rootpass)));
 	if(strlen(pass))
 	{
-		ptr = g_strdup_printf("echo '%s:%s' |/usr/sbin/chpasswd", "root", pass);
+		ptr = g_strdup_printf("echo '%s:%s' |chroot %s /usr/sbin/chpasswd", "root", pass, TARGETDIR);
 		fw_system(ptr);
 		FREE(ptr);
 	}

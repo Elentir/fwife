@@ -10,8 +10,6 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-General : -> Some stock icons are not loaded in configuration part when gtk is not installed on target (due to chroot()).
-
 TODO :
 
 Partdisk plugin : -> add raid support

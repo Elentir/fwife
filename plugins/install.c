@@ -300,8 +300,7 @@ int run(GList **config)
 	ptr = g_strdup_printf("mount /sys -o bind %s/sys", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
-	//Begin configuration part, chroot at targetdir
-	chroot(TARGETDIR);
+	
 	return 0;
 }
  

@@ -86,6 +86,7 @@ void set_page_incompleted();
 //* Some functions for basic messages *//
 void fwife_fatal_error(char *msg);
 void fwife_error(char *msg);
+void fwife_info(char *msg);
 int fwife_question(char *msg);
 char* fwife_entry(char *, char*, char*);
 

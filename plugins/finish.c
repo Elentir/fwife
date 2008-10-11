@@ -27,6 +27,7 @@
 #include <libfwutil.h>
 #include <libfwxconfig.h>
 #include <libfwmouseconfig.h>
+#include <pacman.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -308,11 +309,219 @@ void mouseconfig()
 	FREE(mtype);
 }
 
+int write_dms(char *dms)
+{
+	FILE *fd = fopen("/etc/sysconfig/desktop", "w");
+	
+	if(!fd)
+		return -1;
+	
+	fprintf(fd, "# /etc/sysconfig/desktop\n\n");
+	fprintf(fd, "# Which session manager try to use.\n\n");	
+	
+	if(!strcmp(dms, "KDM"))
+	{
+		fprintf(fd, "#desktop=\"/usr/bin/xdm -nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/slim\"");
+		fprintf(fd, "#desktop=\"/usr/sbin/gdm --nodaemon\"");
+		fprintf(fd, "desktop=\"/usr/bin/kdm -nodaemon\"");
+	}
+	else if(!strcmp(dms, "GDM"))
+	{
+		fprintf(fd, "#desktop=\"/usr/bin/xdm -nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/slim\"");
+		fprintf(fd, "desktop=\"/usr/sbin/gdm --nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/kdm -nodaemon\"");
+	}
+	else if(!strcmp(dms, "Slim"))
+	{
+		fprintf(fd, "#desktop=\"/usr/bin/xdm -nodaemon\"");
+		fprintf(fd, "desktop=\"/usr/bin/slim\"");
+		fprintf(fd, "#desktop=\"/usr/sbin/gdm --nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/kdm -nodaemon\"");
+	}
+	else // default : XDM
+	{
+		fprintf(fd, "desktop=\"/usr/bin/xdm -nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/slim\"");
+		fprintf(fd, "#desktop=\"/usr/sbin/gdm --nodaemon\"");
+		fprintf(fd, "#desktop=\"/usr/bin/kdm -nodaemon\"");
+	}
+	
+	return 0;
+}
+		
+
+void checkdms(GtkListStore *store)
+{
+	PM_DB *db;
+	GtkTreeIter iter;
+
+	if(pacman_initialize(TARGETDIR)==-1)
+		return;
+	if(!(db = pacman_db_register("local")))
+	{
+		pacman_release();
+		return;
+	}
+
+	gtk_list_store_append (store, &iter);
+	gtk_list_store_set (store, &iter, 0, "XDM", 1, "   X Window Display Manager", -1);
+	if(pacman_db_readpkg(db, "kdebase"))
+	{
+		gtk_list_store_append (store, &iter);
+		gtk_list_store_set (store, &iter, 0, "KDM", 1, "  KDE Display Manager", -1);
+	}
+	if(pacman_db_readpkg(db, "gdm"))
+	{
+		gtk_list_store_append (store, &iter);
+		gtk_list_store_set (store, &iter, 0, "GDM", 1, "  Gnome Display Manager", -1);
+	}
+	if(pacman_db_readpkg(db, "slim"))
+	{
+		gtk_list_store_append (store, &iter);
+		gtk_list_store_set (store, &iter, 0, "Slim", 1, "  Simple Login Manager", -1);
+	}
+	pacman_db_unregister(db);
+	pacman_release();
+	return;
+}
+
+int xconfigbox ()
+{
+	GtkWidget* pBoite;
+  	GtkWidget *pEntryRes, *pEntryDepth;
+  	char* sRes, *sDepth, *mdev, *sDms;
+	int needrelease, ret;
+	
+	GtkWidget *pVBox;
+    	GtkWidget *pFrame;
+    	GtkWidget *pVBoxFrame;
+    	GtkWidget *pLabel;
+
+	GtkWidget *combo;
+	GtkTreeIter iter;
+	GtkListStore *store;
+	GtkTreeModel *model;	
+	
+	extern GtkWidget *assistant;
+
+	pBoite = gtk_dialog_new_with_buttons(_("Configuring X11"),
+      		  NULL,
+      		  GTK_DIALOG_MODAL,
+      		  GTK_STOCK_OK,GTK_RESPONSE_OK,
+      		  NULL);
+	gtk_window_set_transient_for(GTK_WINDOW(pBoite), GTK_WINDOW(assistant));
+	gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
+   	
+	pVBox = gtk_vbox_new(TRUE, 0);
+   	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), pVBox, TRUE, FALSE, 5);	
+
+    	/* Creation du premier GtkFrame */
+    	pFrame = gtk_frame_new(_("X11 Configuration"));
+    	gtk_box_pack_start(GTK_BOX(pVBox), pFrame, TRUE, FALSE, 0);
+
+    	/* Creation et insertion d une boite pour le premier GtkFrame */
+    	pVBoxFrame = gtk_vbox_new(TRUE, 0);
+    	gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);   
+
+    	/* Creation et insertion des elements contenus dans le premier GtkFrame */
+    	pLabel = gtk_label_new(_("Resolution :"));
+    	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
+	pEntryRes = gtk_entry_new();
+	gtk_entry_set_text(GTK_ENTRY(pEntryRes), "1024x768");
+    	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryRes, TRUE, FALSE, 0);
+    
+    	pLabel = gtk_label_new(_("Color depth :"));
+    	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pLabel, TRUE, FALSE, 0);
+    	pEntryDepth = gtk_entry_new();
+	gtk_entry_set_text(GTK_ENTRY(pEntryDepth), "24");
+	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pEntryDepth, TRUE, FALSE, 0);
+
+    	/* Creation du deuxieme GtkFrame */
+    	pFrame = gtk_frame_new(_("Select your default display manager : "));
+    	gtk_box_pack_start(GTK_BOX(pVBox), pFrame, TRUE, FALSE, 0);
+
+    	/* Creation et insertion d une boite pour le deuxieme GtkFrame */
+    	pVBoxFrame = gtk_vbox_new(TRUE, 0);
+    	gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);
+
+	store = gtk_list_store_new (2, G_TYPE_STRING, G_TYPE_STRING);
+	combo = gtk_combo_box_new_with_model (GTK_TREE_MODEL (store));
+	g_object_unref (GTK_TREE_MODEL (store));	
+	
+	GtkCellRenderer *renderer = gtk_cell_renderer_text_new();
+	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
+	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 0, NULL);
+
+	renderer = gtk_cell_renderer_text_new();
+	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (combo), renderer, TRUE);
+	gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (combo), renderer,"text", 1, NULL);
+
+	checkdms(store);
+	gtk_combo_box_set_active (GTK_COMBO_BOX (combo), 0);
+
+    	/* Creation et insertion des elements contenus dans le deuxieme GtkFrame */
+    	gtk_box_pack_start(GTK_BOX(pVBoxFrame), combo, TRUE, FALSE, 0);
+
+    	gtk_widget_show_all(pBoite);
+
+    	switch (gtk_dialog_run(GTK_DIALOG(pBoite)))
+    	{
+        	case GTK_RESPONSE_OK:
+            		sRes = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryRes));
+	    		sDepth = (char*)gtk_entry_get_text(GTK_ENTRY(pEntryDepth));
+			
+			gtk_combo_box_get_active_iter(GTK_COMBO_BOX(combo), &iter);
+			model = gtk_combo_box_get_model(GTK_COMBO_BOX(combo));
+			gtk_tree_model_get (model, &iter, 0, &sDms, -1);
+
+			if((sRes == NULL) || !strcmp(sRes, "") || (sDepth == NULL) || !strcmp(sDepth, ""))
+				return -1;
+
+			pid_t pid = fork();
+
+			if(pid == -1)
+				LOG("Error when forking process (X11 config)");
+			else if (pid == 0)
+			{
+				chroot(TARGETDIR);
+				needrelease = fwutil_init();
+				mdev = fwx_get_mousedev();
+
+				if(fwx_doprobe())
+				{
+					if(needrelease)
+						fwutil_release();
+					exit(-1);
+				}
+	
+	
+				fwx_doconfig(mdev, sRes, sDepth);	
+				unlink("/root/xorg.conf.new");
+				write_dms(sDms);
+				exit(0);
+			}
+			else
+			{
+				wait(&ret);
+				if(ret != 0)
+					return -1;
+			}
+           		break;
+        	case GTK_RESPONSE_CANCEL:
+        	case GTK_RESPONSE_NONE:
+        	default:
+			gtk_widget_destroy(pBoite);
+        		break;
+    	}
+	return 0;
+}
+
 int xconfig()
 {
-	char *mdev, *res=NULL, *depth=NULL, *ptr;
-	struct stat buf;
-	int needrelease, ret;
+	char *ptr=NULL;
+	struct stat buf;	
 
 	ptr = g_strdup_printf("%s/usr/bin/xinit", TARGETDIR);
 	if(stat(ptr, &buf))
@@ -338,44 +547,8 @@ int xconfig()
 	}
 	FREE(ptr);
 
-	res = fwife_entry(_("Selecting resolution"),
-		_("Please enter the screen resolution you want to use.\nYou can use values such as 1024x768, 800x600 or 640x480.\n If unsure, just press ENTER."),
-		"1024x768");
-	depth = fwife_entry(_("Selecting color depth"),
-		_("Please enter the color depth you want to use.\n If unsure, just press ENTER."),
-		"24");
-
-	pid_t pid = fork();
-
-	if(pid == -1)
-		LOG("Error when forking process (X11 config)");
-	else if (pid == 0)
-	{
-		chroot(TARGETDIR);
-		needrelease = fwutil_init();
-		mdev = fwx_get_mousedev();
-
-		if(fwx_doprobe())
-		{
-			if(needrelease)
-				fwutil_release();
-			exit(-1);
-		}
-	
-	
-		fwx_doconfig(mdev, res, depth);	
-		unlink("/root/xorg.conf.new");
-		exit(0);
-	}
-	else
-	{
-		wait(&ret);
-		if(ret != 0)
-			return -1;
-	}
-	
-	FREE(res);
-	FREE(depth);
+	if(xconfigbox() == -1)
+		return -1;
 
 	return 0;
 }

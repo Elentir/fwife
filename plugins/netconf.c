@@ -67,7 +67,7 @@ plugin_t plugin =
 
 char *desc()
 {
-	return _("Configure network");
+	return _("Configuring network");
 }
 
 plugin_t *info()
@@ -649,7 +649,7 @@ int run(GList **config)
 	{
 		newprofile->interfaces = g_list_append(newprofile->interfaces, (fwnet_interface_t *) g_list_nth_data(interfaceslist, i));
 	}
-	switch(fwife_question(_("Configure a DSL connexion now?")))
+	switch(fwife_question(_("Do you want to configure a DSL connexion now?")))
 	{
 		case GTK_RESPONSE_YES:
 			dsl_config(newprofile);
@@ -657,7 +657,7 @@ int run(GList **config)
 		case GTK_RESPONSE_NO:
 		break;
 	}
-	char *host = fwife_entry(_("Hostname"), _("Enter computer hostname :"), NULL);
+	char *host = fwife_entry(_("Hostname"), _("Please enter computer hostname :"), NULL);
 
 	pid_t pid = fork();
 

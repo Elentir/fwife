@@ -66,7 +66,7 @@ plugin_t plugin =
 
 char *desc()
 {
-	return _("Configuring timezone");
+	return _("Timezone configuration");
 }
 
 plugin_t *info()
@@ -405,7 +405,7 @@ GtkWidget *load_gtk_widget()
 
 	gtk_box_pack_start(GTK_BOX(pVbox), pScrollbar, TRUE, TRUE, 0);
 
-	UTC = gtk_check_button_new_with_label(_("Use UTC/GMT time coordinates"));
+	UTC = gtk_check_button_new_with_label(_("Set clock to UTC/GMT time coordinates"));
 	gtk_box_pack_start(GTK_BOX (pVbox), UTC, FALSE, FALSE, 3);
 
 	return pVbox;

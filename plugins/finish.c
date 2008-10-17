@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/mount.h>
 #include <libintl.h>
 #include <dialog.h>
 
@@ -202,11 +203,11 @@ void mouseconfig()
         				GTK_STOCK_OK,GTK_RESPONSE_OK,
         				NULL);
 	
-	GtkWidget *label = gtk_label_new("Selecting your mouse");
+	GtkWidget *label = gtk_label_new(_("Selecting your mouse : "));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), label, FALSE, FALSE, 5);
 	GtkWidget *combomouse = getMouseCombo();
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), combomouse, TRUE, FALSE, 10);
-	GtkWidget *label2 = gtk_label_new("Selecting port mouse");
+	GtkWidget *label2 = gtk_label_new(_("Selecting mouse's port :"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), label2, FALSE, FALSE, 5);
 	GtkWidget *comboport = getPortCombo();
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), comboport, TRUE, FALSE, 10);
@@ -366,21 +367,21 @@ void checkdms(GtkListStore *store)
 	}
 
 	gtk_list_store_append (store, &iter);
-	gtk_list_store_set (store, &iter, 0, "XDM", 1, "   X Window Display Manager", -1);
+	gtk_list_store_set (store, &iter, 0, "XDM", 1, _("   X Window Display Manager"), -1);
 	if(pacman_db_readpkg(db, "kdebase"))
 	{
 		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, "KDM", 1, "  KDE Display Manager", -1);
+		gtk_list_store_set (store, &iter, 0, "KDM", 1, _("  KDE Display Manager"), -1);
 	}
 	if(pacman_db_readpkg(db, "gdm"))
 	{
 		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, "GDM", 1, "  Gnome Display Manager", -1);
+		gtk_list_store_set (store, &iter, 0, "GDM", 1, _("  Gnome Display Manager"), -1);
 	}
 	if(pacman_db_readpkg(db, "slim"))
 	{
 		gtk_list_store_append (store, &iter);
-		gtk_list_store_set (store, &iter, 0, "Slim", 1, "  Simple Login Manager", -1);
+		gtk_list_store_set (store, &iter, 0, "Slim", 1, _("  Simple Login Manager"), -1);
 	}
 	pacman_db_unregister(db);
 	pacman_release();
@@ -572,6 +573,20 @@ int prerun(GList **config)
 		if(xconfig() == -1)
 			fwife_error(_("Error when configuring X11."));
 	}
+	
+	// unmout system
+	ptr = g_strdup_printf("umount %s/sys", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("umount %s/proc", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("umount %s/dev", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
+	ptr = g_strdup_printf("umount %s", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);
 	
 	return 0;
 }

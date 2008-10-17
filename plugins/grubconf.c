@@ -46,7 +46,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
-	NULL,
+	load_help_widget,
 	NULL,
 	run,
 	NULL // dlopen handle
@@ -54,7 +54,7 @@ plugin_t plugin =
 
 char *desc()
 {
-	return _("Configuring grub");
+	return _("Configuring GRUB");
 }
 
 plugin_t *info()
@@ -70,15 +70,12 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
 
 	/* On utilise les balises */
-	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\" foreground=\"#f90909\"><b>!!! Hehehe this is grub !!! </b></span>\n"));
+	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\"><b>Installing GRUB bootloader</b></span>\n"));
 	
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
 
-	GtkWidget *separator = gtk_hseparator_new();
-	gtk_box_pack_start (GTK_BOX (pVBox), separator, FALSE, FALSE, 5);
-	
 	GtkWidget *pLabel = gtk_label_new(_("Choose install type :"));
-	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 5);
 
 	/* Creation du premier bouton radio */
 	pRadio1 = gtk_radio_button_new_with_label(NULL, _("MBR  -  Install to Master Boot Record"));
@@ -136,7 +133,7 @@ int run(GList **config)
 	pid_t pid = fork();
 
 	if(pid == -1)
-		LOG("Error when forking process in grubconf plugin.");
+		LOG("Error when fork process in grubconf plugin.");
 	else if(pid == 0)
 	{
 		chroot(TARGETDIR);
@@ -166,6 +163,13 @@ int run(GList **config)
 	}
 	
 	return 0;
+}
+
+GtkWidget *load_help_widget()
+{
+	GtkWidget* help = gtk_label_new(_("GRUB can be installed to a variety of places:\n\n\t1. The Master Boot Record of your first hard drive.\n\t2. A formatted floppy disk.\n\t3. The superblock of your root Linux partition.\n\nOption 3 requires setting the partition bootable with (c)fdisk\nHint: Choose option 3 if you already have a boot manager installed.\n"));
+	
+	return help;
 }
 
  

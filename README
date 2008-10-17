@@ -1,6 +1,6 @@
 						Fwife : Frugalware Installer Frontend Readme
 
-Fwife 0.1 beta
+Fwife 0.2 beta
 
 Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
 
@@ -18,11 +18,8 @@ General : -> Verify C code, remove useless parts, simplify code if possible !
 
 Ideas :
 
--> Made new configuration plugin for selecting default desktop manager (xdm, gdm, kdm) and default window manager
 -> Improve gui (dialogbox for exemple)
 -> Improve help (add tooltip text, etc...)
-
-Text (dialogbox, labels, help widget) need to be write/rewrite with a good english :p
 
 Compiling and testing : Just do a 'make' in source directory then do './fwife' :p
 

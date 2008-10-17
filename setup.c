@@ -129,7 +129,7 @@ void fwife_exit()
 //* Dialog box for quit the installation *//
 void cancel_install(GtkWidget *w, gpointer user_data)
 {
-   int result = fwife_question("Do you want to cancel frugalware installation?\n");
+   int result = fwife_question(_("Are you sure you want to exit from the installer?\n"));
    if(result == GTK_RESPONSE_YES)
    {
         fwife_exit();
@@ -140,7 +140,7 @@ void cancel_install(GtkWidget *w, gpointer user_data)
 //* Dialog Box when instllation finished *//
 void close_install(GtkWidget *w, gpointer user_data)
 {
-   fwife_info("Frugalware installation completed.\nYou can now reboot your computer");
+   fwife_info(_("Frugalware installation completed.\n You can now reboot your computer"));
    fwife_exit();
    
    return;
@@ -182,8 +182,8 @@ int show_help(GtkWidget *w, gpointer user_data)
 	{
 	
 		GtkWidget *helpwidget = plugin_active->load_help_widget();
-		char *title = g_strdup_printf("Help for plugin %s", plugin_active->name);
-		GtkWidget *pBoite = gtk_dialog_new_with_buttons(title,
+		
+		GtkWidget *pBoite = gtk_dialog_new_with_buttons(_("Plugin help"),
         				GTK_WINDOW(assistant),
         				GTK_DIALOG_MODAL,
         				GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -195,12 +195,10 @@ int show_help(GtkWidget *w, gpointer user_data)
 
     		gtk_dialog_run(GTK_DIALOG(pBoite));
 		gtk_widget_destroy(pBoite);
-		FREE(title);
-    		
     	}
 	else
 	{
-		fwife_error("No help available for this plugin");
+		fwife_error(_("No help available for this plugin"));
 	}
     	
 	return 0;
@@ -411,7 +409,7 @@ void fwife_fatal_error(char* error_str)
                                          error_str);
 
     	gtk_window_set_resizable (GTK_WINDOW(error_dlg), FALSE);
-    	gtk_window_set_title (GTK_WINDOW(error_dlg), "Fwife error");
+    	gtk_window_set_title (GTK_WINDOW(error_dlg), _("Fwife error"));
 
 	gtk_dialog_run (GTK_DIALOG(error_dlg));
 

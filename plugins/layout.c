@@ -55,7 +55,7 @@ plugin_t *info()
 
 char *desc()
 {
-	return _("Selecting the keyboard map");
+	return _("Keyboard map selection");
 }
 
 int find(char *dirname)
@@ -163,8 +163,8 @@ GtkWidget *load_gtk_widget()
 	pvbox = gtk_vbox_new(FALSE, 5);
 
 	GtkWidget *labelhelp = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(labelhelp), _("<span face=\"Courier New\"><b>Select your keybord layout to continue</b></span>\n"));
-	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 6);
+	gtk_label_set_markup(GTK_LABEL(labelhelp), _("<span face=\"Courier New\"><b>You may select one of the following keyboard maps.</b></span>\n"));
+	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 0);
 
 	return pvbox;

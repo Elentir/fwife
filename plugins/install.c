@@ -53,7 +53,7 @@ plugin_t plugin =
 
 char *desc()
 {
-	return _("Installing the selected packages");
+	return _("Installing packages");
 }
 
 plugin_t *info()

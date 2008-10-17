@@ -47,7 +47,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
- 	NULL,
+ 	load_help_widget,
 	prerun,
 	run,
 	NULL // dlopen handle
@@ -60,7 +60,7 @@ plugin_t *info()
 
 char *desc()
 {
-	return (_("Configuring the source of the installation"));
+	return (_("Selecting mirrors"));
 }
 
 GList *getmirrors(char *fn)
@@ -161,7 +161,7 @@ void add_mirror (GtkWidget *button, gpointer data)
   GtkWidget* pEntry, *label;
   const gchar* sName;
 
-  pBoite = gtk_dialog_new_with_buttons(_("Add a personalized server"),
+  pBoite = gtk_dialog_new_with_buttons(_("Add a custom server"),
         GTK_WINDOW(assistant),
         GTK_DIALOG_MODAL,
         GTK_STOCK_OK,GTK_RESPONSE_OK,
@@ -170,7 +170,7 @@ void add_mirror (GtkWidget *button, gpointer data)
   gtk_window_set_position(GTK_WINDOW(pBoite), GTK_WIN_POS_CENTER_ON_PARENT);
 
     pEntry = gtk_entry_new();
-    label = gtk_label_new(_("Enter here the address of the server you want to add!\n This can be a local server or a distant one!")); 
+    label = gtk_label_new(_("You may specify a custom mirror (eg. LAN) so you can download packages faster.\nEnter server's address below :")); 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), label, TRUE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), pEntry, TRUE, FALSE, 5);
     gtk_widget_show_all(pBoite);
@@ -239,7 +239,7 @@ GtkWidget *mirrorview()
 	
 	renderer = gtk_cell_renderer_toggle_new ();
   	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled), model);
-  	col = gtk_tree_view_column_new_with_attributes ("Use?",
+  	col = gtk_tree_view_column_new_with_attributes (_("Use"),
 						     renderer,
 						     "active", 0,
 						     NULL);
@@ -251,14 +251,14 @@ GtkWidget *mirrorview()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, "Mirrors");
+	gtk_tree_view_column_set_title(col, _("Mirrors"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
 	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
-	gtk_tree_view_column_set_title(col, "Froms");
+	gtk_tree_view_column_set_title(col, _("Froms"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	return view;
@@ -272,7 +272,7 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *image;
 
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
-			
+
 	// array of mirrors
 	viewserver = mirrorview();
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewserver));
@@ -285,10 +285,10 @@ GtkWidget *load_gtk_widget()
 	buttonlist = gtk_hbox_new(TRUE, 10);
 			
 	//* Set buttons *//
-	addmirror = gtk_button_new_with_label(_("Add mirror"));
+	addmirror = gtk_button_new_with_label(_("Add custom mirror"));
 	//* TODO : Fix it : need 2 creation to be show lol (why???) *//
 	delmirror = gtk_button_new_with_label(NULL);
-	delmirror = gtk_button_new_with_label(_("Remove mirror"));
+	delmirror = gtk_button_new_with_label(_("Remove custom mirror"));
 		
 	//* Set images *//
 	image = gtk_image_new_from_stock (GTK_STOCK_ADD, 2);
@@ -317,7 +317,7 @@ int prerun(GList **config)
 	int i;
 	gboolean checked;
 
-	switch(fwife_question(_("You need a net connexion running,\n do you want to configure your network?")))
+	switch(fwife_question(_("You need an active internet connexion ,\n do you want to configure your network now?")))
 	{
 		case GTK_RESPONSE_YES:
 			fw_system_interactive("gnetconfig");
@@ -384,5 +384,12 @@ int run(GList **config)
 	updateconfig(fn, newmirrorlist);
 	FREE(fn); 
 	return(0);
+}
+
+GtkWidget *load_help_widget()
+{
+	GtkWidget *labelhelp = gtk_label_new("Select one or more nearly mirrors to speed up package downloading.\nYou can add your own custom mirrors to increase downloadind speed by using suitable button.");
+	
+	return labelhelp;
 }
  

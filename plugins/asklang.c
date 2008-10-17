@@ -124,7 +124,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_pixbuf_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_LANG_FLAG, NULL);
-	gtk_tree_view_column_set_title(col, "Flag");
+	gtk_tree_view_column_set_title(col, _("Flag"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	//* Column for lang code (ex : en_US) *//
@@ -132,7 +132,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_LANG_CODE, NULL);
-	gtk_tree_view_column_set_title(col, "Code");
+	gtk_tree_view_column_set_title(col, _("Code"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
 
 	//* Column for language name *//
@@ -140,7 +140,7 @@ GtkWidget *load_gtk_widget()
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(col, renderer, TRUE);
 	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_LANG_NAME, NULL);
-	gtk_tree_view_column_set_title(col, "Name");
+	gtk_tree_view_column_set_title(col, _("Name"));
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	//* Set all languages with flag *//

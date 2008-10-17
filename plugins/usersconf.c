@@ -76,7 +76,7 @@ void remove_user (GtkWidget *widget, gpointer data)
 		ptr = g_strdup_printf("chroot %s /usr/sbin/userdel %s", TARGETDIR, old_name);
 		if(fw_system(ptr) != 0)
 		{
-			fwife_error(_("A user can be deleted!"));
+			fwife_error(_("User can be deleted!"));
 		}
 		FREE(ptr);
 	  	
@@ -190,7 +190,7 @@ void add_user (GtkWidget *widget, gpointer data)
 	    if(strcmp(sPass, sVerify))
 	    {
 		    gtk_widget_destroy(pBoite);
-		    fwife_error(_("Password verification incorrect"));
+		    fwife_error(_("Password verification failed! Please try again."));
 		    return;
 	    }
 	   
@@ -206,7 +206,7 @@ void add_user (GtkWidget *widget, gpointer data)
 	
 	    if(fw_system(ptr) != 0)
 	    {
-		    fwife_error(_("A user can be added! Verify existing name, lowercase name, and special characters"));
+		    fwife_error(_("A user can be added! Check that you use lowercase name or that there is not an other user bearing the same name."));
 		    FREE(ptr);
 		    gtk_widget_destroy(pBoite);
 		    return;
@@ -286,7 +286,7 @@ GtkWidget *load_gtk_widget()
 	hbox = gtk_hbox_new(FALSE, 5);	
 
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>A litle bit help</b></span>\n"));	
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Creating user accounts and set root password</b></span>\n"));	
 
 	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);

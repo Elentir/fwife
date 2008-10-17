@@ -71,7 +71,7 @@ plugin_t *info()
 
 char *desc()
 {
-	return _("Select package you want to install");
+	return _("Packages selection");
 }
 
 PM_DB *mydatabase;
@@ -533,6 +533,7 @@ void categorie_changed(GtkTreeSelection *selection, gpointer data)
 	}	
 }
 
+//* get a gtk tree list for categories *//
 GtkWidget *getcategorieslist()
 {
 	GtkListStore *store;
@@ -583,20 +584,23 @@ GtkWidget *getcategorieslist()
 	return pScrollbar;
 }
 
+//* Load main widget *//
 GtkWidget *load_gtk_widget()
 {
 	GtkWidget *hsepa1, *hsepa2, *info;
 	GtkWidget *image;
-	GtkWidget *pvboxp = gtk_vbox_new(FALSE,10);
-	GtkWidget *phbox = gtk_hbox_new(TRUE,10);
-	pvbox = gtk_vbox_new(FALSE,10);
-	GtkWidget *phbox2 = gtk_hbox_new(FALSE,10);
+	GtkWidget *pvboxp = gtk_vbox_new(FALSE,5);
+	GtkWidget *phbox = gtk_hbox_new(TRUE,8);
+	pvbox = gtk_vbox_new(FALSE,5);
+	GtkWidget *phbox2 = gtk_hbox_new(FALSE,8);
 	GtkWidget *categl = getcategorieslist();
 	GtkWidget *packetl = getpacketlist();
 	hsepa1 = gtk_hseparator_new();
 	hsepa2 = gtk_hseparator_new();
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Select packets you want to install</b></span>\n"));
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Please select which categories/packages to install</b></span>\n"));
+	
+	// description of each package (in expert mode only)
 	packetinfo = gtk_label_new(NULL);
 	gtk_label_set_justify(GTK_LABEL(packetinfo), GTK_JUSTIFY_LEFT);
 	// load a nice image
@@ -627,7 +631,7 @@ int prerun(GList **config)
 	GtkWidget *progress, *vbox;
 	extern GtkWidget *assistant;	
 
-	switch(fwife_question(_("Do you want to use expert mode (show all package details)")))
+	switch(fwife_question(_("Do you want to use expert mode?\n\nThe normal mode shows a choice like 'C compiler system', the expert mode show you 'C libs', 'C compiler', 'C include files', etc - each individual package. Obviously, you should know what you're doing if you use the expert mode since it's possible to skip packages that are crucial to the functioning of your system. Choose 'no' for using normal mode that select groups of packages, or choose 'yes' for using expert mode with a switch for each package.")))
 	{
 		case GTK_RESPONSE_YES:
 			break;

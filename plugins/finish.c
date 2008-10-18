@@ -506,6 +506,7 @@ int xconfigbox ()
 			else
 			{
 				wait(&ret);
+				gtk_widget_destroy(pBoite);
 				if(ret != 0)
 					return -1;
 			}
@@ -574,7 +575,13 @@ int prerun(GList **config)
 			fwife_error(_("Error when configuring X11."));
 	}
 	
-	// unmout system
+	return 0;
+}
+
+int run(GList **config)
+{
+    	char *ptr;
+	// unmout system directories
 	ptr = g_strdup_printf("umount %s/sys", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
@@ -589,10 +596,5 @@ int prerun(GList **config)
 	FREE(ptr);
 	
 	return 0;
-}
-
-int run(GList **config)
-{
-    return 0;
 }
  

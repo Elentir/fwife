@@ -673,18 +673,15 @@ int prerun(GList **config)
 	// Initialize pacman
 	if(pacman_initialize(TARGETDIR) == -1)
 	{
-		fprintf(stderr, "failed to initialize pacman library (%s)\n",
-			pacman_strerror(pm_errno));
+		LOG("failed to initialize pacman library (%s)\n", pacman_strerror(pm_errno));
 		return(1);
 	}
 	
-	chdir(TARGETDIR);	
 	pacman_set_option(PM_OPT_LOGMASK, -1);
 	pacman_set_option(PM_OPT_LOGCB, (long)cb_log);
 	if(pacman_set_option(PM_OPT_DBPATH, (long)PM_DBPATH) == -1)
 	{
-		fprintf(stderr, "failed to set option DBPATH (%s)\n",
-				pacman_strerror(pm_errno));
+		LOG("failed to set option DBPATH (%s)\n", pacman_strerror(pm_errno));
 		return(1);
 	}
 	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.1);
@@ -696,13 +693,12 @@ int prerun(GList **config)
 	i = pacman_db_register("local");
 	if(i==NULL)
 	{
-		fprintf(stderr, "could not register 'local' database (%s)\n", pacman_strerror(pm_errno));
+		LOG("could not register 'local' database (%s)\n", pacman_strerror(pm_errno));
 		return(1);
 	}
 	else
 		syncs = g_list_append(syncs, i);	
 		
-	chdir(TARGETDIR);
 	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.1);
 	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Udpate and load database"));
 	if(prepare_pkgdb(PACCONF, config, &syncs) == -1)

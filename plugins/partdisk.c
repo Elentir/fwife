@@ -73,7 +73,7 @@ plugin_t plugin =
 	load_gtk_widget,
  	GTK_ASSISTANT_PAGE_CONTENT,
  	FALSE,
-	NULL,
+	load_help_widget,
   	prerun,
 	run,
 	NULL // dlopen handle
@@ -1140,5 +1140,12 @@ int run(GList **config)
 	FREE(np);
 		
 	return(0);
+}
+
+GtkWidget *load_help_widget()
+{
+	GtkWidget *help = gtk_label_new(_("You must select at least one swap partition and one root partition to continue to the next stage.\n For example, to assign a root partition, select the device in list located in top of the page,\n then select a partition and use suitable button to make it as a root partition.\n\nYou may use your other partitions to distribute your Linux system across more than one partition.\n You might want to mount directories such as /boot, /home or /usr/local on separate partitions.\n You should not try to mount /usr, /etc, /sbin or /bin on their own partitions\n since they contain utilities needed to bring the system up and mount partitions.\n Also, do not reuse a partition that you've already entered before.\n To set a mountpoint for a partition, edit the cell in the table of the partitions (column \"Mountpoint\") by double-clicking on it.\n\nIf you want to modify partition table (create or modify partitions),\n you can run GParted but this will erase all your selected partitions."));
+	
+	return help;
 }
  

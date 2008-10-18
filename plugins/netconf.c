@@ -59,7 +59,7 @@ plugin_t plugin =
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,
-	NULL,
+	load_help_widget,
 	prerun,
 	run,
 	NULL // dlopen handle
@@ -67,7 +67,7 @@ plugin_t plugin =
 
 char *desc()
 {
-	return _("Configuring network");
+	return _("Configuring your network");
 }
 
 plugin_t *info()
@@ -139,10 +139,9 @@ char *ask_nettype()
        			NULL);
 
 	GtkWidget *labelinfo = gtk_label_new(_("Now we need to know how your machine connects to the network.\n"
-			"If you have an internal network card and an assigned IP address, gateway, and DNS, use 'static' "
+			"If you have an internal network card and an assigned IP address, gateway, and DNS,\n use 'static' "
 			"to enter these values.\n"
-			"If your IP address is assigned by a DHCP server (commonly used by cable modem services), select 'dhcp'. \n"
-			"Finally, if you do not have a network card, select the 'lo' choice. \n"));
+			"If your IP address is assigned by a DHCP server (commonly used by cable modem services),\n select 'dhcp'. \n"));
 	
 	GtkWidget *combotype = getNettypeCombo();
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
@@ -183,8 +182,13 @@ int configure_wireless(fwnet_interface_t *interface)
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
        			NULL);
 
-	GtkWidget *labelinfo = gtk_label_new(_("Wirelles documentation here.\n"
-			"And description of all entrys! "));
+	GtkWidget *labelinfo = gtk_label_new(_("In order to use wireless, you must set your extended netwok name (ESSID).\n"
+						"If you have a WEP encryption key, then please enter it below.\n"
+						"Examples: 4567-89AB-CD or s:password\n"
+						"If you have a WPA passphrase, then please enter it below.\n"
+						"Example: secret\n"
+						"If you want to use a custom driver (not the generic one, called 'wext'), then please enter it below.\n"
+						"If unsure enter nothing"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
@@ -253,7 +257,7 @@ int configure_static(fwnet_interface_t *interface, GtkTreeIter iter)
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
        			NULL);
 
-	GtkWidget *labelinfo = gtk_label_new(_("Enter static network parameters"));
+	GtkWidget *labelinfo = gtk_label_new(_("Enter static network parameters :"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
@@ -384,7 +388,7 @@ int dsl_config(fwnet_profile_t *profile)
 			
 			if(strcmp(passverify, passwd))
 			{
-				fwife_error("Passwords do not match! Retry");
+				fwife_error("Passwords do not match! Try again.");
 				gtk_widget_destroy(pBoite);
 				dsl_config(profile);
 				return 0;
@@ -463,7 +467,7 @@ int add_interface(GtkWidget *button, gpointer data)
 
 	if(strcmp(nettype, "lo") && fwnet_is_wireless_device(iface))
 	{
-		switch(fwife_question(_("Wireless extension detected : Configure wireless?")))
+		switch(fwife_question(_("It seems that this network card has a wireless extension.\n\nConfigure your wireless now?")))
 					{
 						case GTK_RESPONSE_YES:
 							configure_wireless(newinterface);
@@ -476,7 +480,7 @@ int add_interface(GtkWidget *button, gpointer data)
 	if(!strcmp(nettype, "dhcp"))
 	{
 		ptr = fwife_entry(_("Set DHCP hostname"), _("Some network providers require that the DHCP hostname be\n"
-			"set in order to connect. If so, they'll have assigned a hostname to your machine.\n If you were"
+			"set in order to connect.\n If so, they'll have assigned a hostname to your machine.\n If you were"
 			"assigned a DHCP hostname, please enter it below.\n If you do not have a DHCP hostname, just"
 			"hit enter."), NULL);
 		if(strlen(ptr))
@@ -657,7 +661,7 @@ int run(GList **config)
 		case GTK_RESPONSE_NO:
 		break;
 	}
-	char *host = fwife_entry(_("Hostname"), _("Please enter computer hostname :"), NULL);
+	char *host = fwife_entry(_("Hostname"), _("We'll need the name you'd like to give your host.\nThe full hostname is needed, such as:\n\nfrugalware.example.net\n\nEnter full hostname:"), "frugalware.example.net");
 
 	pid_t pid = fork();
 
@@ -677,4 +681,11 @@ int run(GList **config)
 	FREE(host);
 	return 0;
 }
+
+GtkWidget *load_help_widget()
+{
+	GtkWidget *helplabel = gtk_label_new(_("Select network interface you want to configure then click on add button and follow instructions..."));
+	return helplabel;
+}
+	
  

@@ -281,7 +281,8 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *view;
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
-
+	
+	// main vbox
 	vboxp = gtk_vbox_new(FALSE, 5);
 	hbox = gtk_hbox_new(FALSE, 5);	
 
@@ -344,7 +345,7 @@ GtkWidget *load_gtk_widget()
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-	GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
+	GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
 	gtk_box_pack_start (GTK_BOX (hbox), pScrollbar, TRUE, TRUE, 5);
 

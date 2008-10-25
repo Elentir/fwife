@@ -10,6 +10,8 @@ Knows Bugs :
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
+Configsource plugin : -> No feedback during the download when using file:/// as a custom mirror
+
 TODO for 0.3:
 
 Partdisk plugin : -> add raid support

@@ -500,15 +500,16 @@ int xconfigbox ()
 	
 				fwx_doconfig(mdev, sRes, sDepth);	
 				unlink("/root/xorg.conf.new");
+				ret = fwx_dotest();
 				write_dms(sDms);
-				exit(0);
+				exit(ret);
 			}
 			else
 			{
 				wait(&ret);
 				gtk_widget_destroy(pBoite);
-				if(ret != 0)
-					return -1;
+				if(ret)
+					xconfigbox();
 			}
            		break;
         	case GTK_RESPONSE_CANCEL:

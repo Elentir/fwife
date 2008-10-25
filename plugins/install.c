@@ -161,11 +161,6 @@ void progress_event (unsigned char event, void *data1, void *data2)
 		case PM_TRANS_EVT_INTERCONFLICTS_START:
 			substr = g_strdup (_("Looking for inter-conflicts"));			
 			break;
-		case PM_TRANS_EVT_CHECKDEPS_DONE:
-		case PM_TRANS_EVT_RESOLVEDEPS_DONE:
-		case PM_TRANS_EVT_INTERCONFLICTS_DONE:
-			substr = g_strdup (_("Done"));
-			break;
 		case PM_TRANS_EVT_ADD_START:
 			substr = g_strdup_printf (_("Installing %s-%s"),
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_NAME),
@@ -175,31 +170,6 @@ void progress_event (unsigned char event, void *data1, void *data2)
 			substr = g_strdup_printf (_("Packet %s-%s installed"),
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_NAME),
 					(char*)pacman_pkg_getinfo(data1, PM_PKG_VERSION));
-			break;
-		case PM_TRANS_EVT_UPGRADE_START:
-			substr = g_strdup_printf (_("Upgrading %s"),
-					(char*)pacman_pkg_getinfo(data1, PM_PKG_NAME));			
-			break;
-		case PM_TRANS_EVT_UPGRADE_DONE:
-			substr = g_strdup_printf (_("upgraded %s from %s to %s"),
-					(char*)pacman_pkg_getinfo(data1, PM_PKG_NAME),
-					(char*)pacman_pkg_getinfo(data2, PM_PKG_VERSION),
-					(char*)pacman_pkg_getinfo(data1, PM_PKG_VERSION));
-			break;
-		case PM_TRANS_EVT_INTEGRITY_START:
-			substr = g_strdup (_("Checking package integrity"));
-			break;
-		case PM_TRANS_EVT_INTEGRITY_DONE:
-			substr = g_strdup (_("Done"));
-			break;
-		case PM_TRANS_EVT_SCRIPTLET_INFO:
-			substr = g_strdup ((char*)data1);
-			break;
-		case PM_TRANS_EVT_SCRIPTLET_START:
-			substr = g_strdup ((char*)data1);
-			break;
-		case PM_TRANS_EVT_SCRIPTLET_DONE:
-			substr = g_strdup (_("Done"));
 			break;
 		case PM_TRANS_EVT_RETRIEVE_START:
 			substr = g_strdup_printf (_("Retrieving packages from %s"), (char*)data1);
@@ -283,6 +253,10 @@ int installpkgs(GList *pkgs)
 
 int prerun(GList **config)
 {
+	// fix gtk graphical bug : forward button is clicked in
+	set_page_completed();
+	set_page_incompleted();
+
 	copyfile("/proc/mounts", "/etc/mtab");
 
 	installpkgs((GList*)data_get(*config, "packages"));

@@ -4,17 +4,20 @@ Fwife 0.2 beta
 
 Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
 
-This version only support netinstall because it's necessary for fwlive. I will see after for a local version.
+This version only support netinstall because it's necessary for fwlive.
 
 Knows Bugs : 
 
 Select plugin : -> graphical bug with packet description label when description too long.
 
-TODO :
+TODO for 0.3:
 
 Partdisk plugin : -> add raid support
 
 General : -> Verify C code, remove useless parts, simplify code if possible !
+	  -> Need a local version working with gtk+-directfb library
+
+Plugins : -> Cut some plugins into 2 for make it more simpler for newbies
 
 Ideas :
 

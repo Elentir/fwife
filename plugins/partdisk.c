@@ -38,8 +38,6 @@ static GList *devs=NULL;
 
 //* Current root partition selected */
 static GList* rootpart = NULL;
-//* count swap partition number *//
-static int nbswap = 0;
 
 static GtkWidget *comboparts = NULL;
 static GtkWidget *partview = NULL;
@@ -451,11 +449,6 @@ void cell_edited(GtkCellRendererText *cell, const gchar *path_string, gchar *new
 					{
 						case GTK_RESPONSE_YES:
 							gtk_list_store_set (GTK_LIST_STORE (model), &iter, TYPE_COLUMN, NULL, -1);
-							nbswap--;
-							if(nbswap<=0)
-							{
-								set_page_incompleted();
-							}
 							break;
 						case GTK_RESPONSE_NO:
 							return;
@@ -554,26 +547,26 @@ int requestformat(char *namedev)
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
 
 	GtkWidget *pLabel = gtk_label_new(_("Choose filesystem :"));
-	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 0);
-
-	/* First radio button */
-	GtkWidget *pRadio1 = gtk_radio_button_new_with_label(NULL, _("ext2 - Standard Linux ext2fs filesystem"));
-	gtk_box_pack_start(GTK_BOX (pVBox), pRadio1, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 2);
 	
-	/* Ext3 filesystem */
-	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("ext3 - Journalising version of the ext2fs filesystem"));
-	gtk_box_pack_start(GTK_BOX (pVBox), pRadio2, FALSE, FALSE, 0);
+	/* Ext3 filesystem - default*/
+	GtkWidget *pRadio1 = gtk_radio_button_new_with_label(NULL, _("ext3 - Journalising version of the ext2fs filesystem"));
+
+	/* Ext2 filesystem */
+	GtkWidget *pRadio2 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("ext2 - Standard Linux ext2fs filesystem"));
+	gtk_box_pack_start(GTK_BOX (pVBox), pRadio2, FALSE, FALSE, 2);
+	gtk_box_pack_start(GTK_BOX (pVBox), pRadio1, FALSE, FALSE, 2);
 	
 	/* Reiser Filesystem */
 	GtkWidget *pRadio3 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("reiserfs - Hans Reiser's journalising filesystem"));
-	gtk_box_pack_start(GTK_BOX (pVBox), pRadio3, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX (pVBox), pRadio3, FALSE, FALSE, 2);
 	
 	/* XFS */
 	GtkWidget *pRadio4 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("xfs - SGI's journalising filesystem"));
-	gtk_box_pack_start(GTK_BOX (pVBox), pRadio4, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX (pVBox), pRadio4, FALSE, FALSE, 2);
 		
 	GtkWidget *pRadio5 = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadio1), _("Noformat - keep filesystem"));
-	gtk_box_pack_start(GTK_BOX (pVBox), pRadio5, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX (pVBox), pRadio5, FALSE, FALSE, 2);
 	
 	GtkWidget *separator = gtk_hseparator_new();
 	gtk_box_pack_start (GTK_BOX (pVBox), separator, FALSE, FALSE, 5);
@@ -790,7 +783,7 @@ void set_root_part(GtkWidget *widget, gpointer data)
 		rootpart = point;
 		
 		// check if at least one swap partition and one root partition is selected
-		if(rootpart && nbswap>0)
+		if(rootpart)
 		{
 			set_page_completed();
 		}
@@ -847,10 +840,8 @@ void set_swap_part(GtkWidget *widget, gpointer data)
 			g_free(point->data);
 		// add new
 		point->data = mount;
-		// yeah we have a new swap partition
-		nbswap++;
 		// check if completed page conditions are verified
-		if(rootpart && nbswap>0)
+		if(rootpart)
 		{
 			set_page_completed();
 		}	
@@ -894,7 +885,6 @@ void run_gparted(GtkWidget *widget, gpointer data)
 			gtk_combo_box_set_active (GTK_COMBO_BOX (comboparts), 0);
 			change_part_list(GTK_COMBO_BOX (comboparts), data);
 			//* Mountpoint are reset *//
-			nbswap = 0;
 			rootpart = NULL;
 			set_page_incompleted();
 			break;

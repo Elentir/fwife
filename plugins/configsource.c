@@ -317,7 +317,7 @@ int prerun(GList **config)
 	int i;
 	gboolean checked;
 
-	switch(fwife_question(_("You need an active internet connexion ,\n do you want to configure your network now?")))
+	switch(fwife_question(_("You need an active internet connection ,\n do you want to configure your network now?")))
 	{
 		case GTK_RESPONSE_YES:
 			fw_system_interactive("gnetconfig");

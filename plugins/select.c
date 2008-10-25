@@ -777,7 +777,8 @@ int run(GList **config)
 			GList *pkgs = (GList*)data_get(allpackets, (char*)g_list_nth_data(cats, i));
 			for(j=0; j<g_list_length(pkgs); j+=4)
 			{
-				allpkgs = g_list_append(allpkgs, g_list_nth_data(pkgs, j));
+				if(!strcmp((char*)g_list_nth_data(pkgs, j+3), "On"))
+					allpkgs = g_list_append(allpkgs, g_list_nth_data(pkgs, j));
 			}
 		}
 	}	

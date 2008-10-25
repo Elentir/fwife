@@ -73,7 +73,7 @@ void remove_user (GtkWidget *widget, gpointer data)
   	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
         {
 		gtk_tree_model_get (model, &iter, COLUMN_USR_NAME, &old_name, -1);
-		ptr = g_strdup_printf("chroot %s /usr/sbin/userdel %s", TARGETDIR, old_name);
+		ptr = g_strdup_printf("chroot %s /usr/sbin/userdel -r %s", TARGETDIR, old_name);
 		if(fw_system(ptr) != 0)
 		{
 			fwife_error(_("User can be deleted!"));
@@ -196,7 +196,7 @@ void add_user (GtkWidget *widget, gpointer data)
 	   
 	    //* Add user into the system *//
 	    if(!strlen(sShell) && !strlen(sHome))
-		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd '%s'", TARGETDIR, sName);
+		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd -m '%s'", TARGETDIR, sName);
 	    else if(!strlen(sShell))
 		    ptr = g_strdup_printf("chroot %s /usr/sbin/useradd -d '%s' -m '%s'", TARGETDIR, sHome, sName);
 	    else if(!strlen(sHome))

@@ -35,6 +35,8 @@ static GtkWidget *labelpkg;
 
 float	rate;
 int	offset;
+int howmany;
+int remains;
 char 	reponame[PM_DLFNM_LEN+1];
 
 plugin_t plugin =
@@ -86,11 +88,11 @@ int progress_update(PM_NETBUF *ctl, int xferred, void *arg)
 	size = *(int*)arg;
 	per = ((float)(xferred+offset) / size) * 100;
 	name = strdup(reponame);
-	ptr = g_strdup_printf("Downloading %s ...", drop_version(name));
+	ptr = g_strdup_printf(_("Downloading %s... (%d/%d)"), drop_version(name), remains, howmany);
 	gtk_progress_bar_set_text (GTK_PROGRESS_BAR(progress), ptr);
 	if(per>=0 && per <=100)
 		gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), (float)per/100);
-
+	
 	FREE(ptr);
 	FREE(name);
 	
@@ -232,6 +234,8 @@ int installpkgs(GList *pkgs)
 	pacman_set_option (PM_OPT_DLOFFSET, (long)&offset);
 	pacman_set_option (PM_OPT_DLRATE, (long)&rate);
 	pacman_set_option (PM_OPT_DLFNM, (long)reponame);
+	pacman_set_option (PM_OPT_DLHOWMANY, (long)&howmany);
+	pacman_set_option (PM_OPT_DLREMAIN, (long)&remains);
 	
 	PM_DB *db_local = pacman_db_register("local");
 	if(db_local == NULL) {

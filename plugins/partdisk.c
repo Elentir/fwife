@@ -1017,11 +1017,11 @@ GtkWidget *load_gtk_widget()
 	gparted = gtk_button_new_with_label(_("Run Gparted"));
 	
 	//* Set images *//
-	image = gtk_image_new_from_stock (GTK_STOCK_DELETE, 3);
+	image = gtk_image_new_from_file("/usr/share/fwife/images/clean.png");
 	gtk_button_set_image(GTK_BUTTON(format), image);
-	image = gtk_image_new_from_stock (GTK_STOCK_HOME, 3);
+	image = gtk_image_new_from_file("/usr/share/fwife/images/home.png");
 	gtk_button_set_image(GTK_BUTTON(mainpart), image);
-	image = gtk_image_new_from_stock (GTK_STOCK_CONVERT, 3);
+	image = gtk_image_new_from_file("/usr/share/fwife/images/swap.png");
 	gtk_button_set_image(GTK_BUTTON(swappart), image);
 	image = gtk_image_new_from_file("/usr/share/fwife/images/gparted.png");
 	gtk_button_set_image(GTK_BUTTON(gparted), image);

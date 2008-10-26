@@ -88,36 +88,88 @@ int find(char *dirname)
 	return(0);
 }
 
-//* Need to have one selected - disable next button if unselected *//
-void selection_changed(GtkTreeSelection *selection, gpointer data)
+//* /!\ Need free memory *//
+char* get_type(char *elem)
 {
-	GtkTreeView *treeview;
-  	GtkTreeModel *model;
-  	GtkTreeIter iter;
+	char* token;
+	char *saveptr = NULL;
+	char* str = elem;
 	
-  	treeview = gtk_tree_selection_get_tree_view (selection);
-  		
-	if (gtk_tree_selection_get_selected (selection, &model, &iter))
-   	{
-		set_page_completed();	
+	token = strtok_r(str, "/", &saveptr);
+	return(strdup(token));
+}
+	
+char* get_layout(char *elem)
+{
+	char* token;
+	char *saveptr = NULL;
+	char* str = elem;
+	
+	token = strtok_r(str, "/", &saveptr);
+	
+	return(strdup(saveptr));
+}
+
+GtkTreePath *find_type_path(char *type)
+{
+	GtkTreeIter iter;
+	GtkTreeView *treeview = (GtkTreeView *)viewlayout;
+	GtkTreeModel *model = gtk_tree_view_get_model (treeview);
+	char *name;
+
+	if(gtk_tree_model_get_iter_first (model, &iter) == FALSE)
+	{
+		return(NULL);
 	}
 	else
 	{
-		set_page_incompleted();	
+		do
+		{
+			gtk_tree_model_get (model, &iter, 0, &name, -1);
+			if(!strcmp(type, name))
+				return(gtk_tree_model_get_path(model, &iter));
+			
+		} while(gtk_tree_model_iter_next(model, &iter));
 	}
-		
+	return(NULL);
+}
+
+//* Need to have one selected - disable next button if unselected *//
+void selection_changed(GtkTreeSelection *selection, gpointer data)
+{
+	GtkTreeIter iter, iter_parent;
+	GtkTreeModel *model = gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout));
+	
+	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
+	{
+		if(gtk_tree_model_iter_parent(model, &iter_parent, &iter) == FALSE)
+		{	
+			set_page_incompleted();
+			return;
+		}
+		else
+		{
+			set_page_completed();
+		}		
+	}
+	else
+	{
+		set_page_incompleted();
+	}
 }
 
 GtkWidget *load_gtk_widget()
 {
 	int i;
-	GtkListStore *store;
+	char *type = NULL, *layout = NULL, *elem = NULL;
+	GtkTreeStore *store;
 	GtkTreeModel *model;
 	GtkTreeViewColumn *col;
-	GtkTreeIter iter;
+	GtkTreeIter iter, child_iter;
 	GtkCellRenderer *renderer;
 	GtkWidget *pScrollbar, *pvbox;
 	GtkTreeSelection *selection;
+	GtkTreePath *path = NULL;
 
 	if (layoutl)
 	{
@@ -128,7 +180,7 @@ GtkWidget *load_gtk_widget()
 	find("/usr/share/keymaps/i386");
 	layoutl = g_list_sort(layoutl, cmp_str);
 	
-	store = gtk_list_store_new(1, G_TYPE_STRING);
+	store = gtk_tree_store_new(1, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
 	viewlayout = gtk_tree_view_new_with_model(model);
@@ -143,12 +195,37 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_set_title(col, "Code");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);	
 	
-	for(i=0; i < g_list_length(layoutl); ++i) 
-	{		
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter);
-		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter,
-			0, (gchar*)g_list_nth_data(layoutl, i), -1);
+	if(layoutl)
+	{
+		for(i=0; i < g_list_length(layoutl); i++) 
+		{		
+			elem = strdup((char*)g_list_nth_data(layoutl, i));
+			type = get_type(elem);
+			FREE(elem);
+			elem = strdup((char*)g_list_nth_data(layoutl, i));
+			layout = get_layout(elem);
+			FREE(elem);
+			if((path = find_type_path(type)) == NULL)
+			{
+				gtk_tree_store_append(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter, NULL);
+				gtk_tree_store_set(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &iter,
+					   0, type, -1);
+				gtk_tree_store_append(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &child_iter, &iter);
+				gtk_tree_store_set(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &child_iter,
+						0, layout, -1);
+				
+			}
+			else
+			{
+				if(gtk_tree_model_get_iter(model, &iter, path) == FALSE)
+					LOG("Error when add layout to the treeview");
+				gtk_tree_store_append(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &child_iter, &iter);
+				gtk_tree_store_set(GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout))), &child_iter,
+						0, layout, -1);
+			}
+			FREE(type);
+			FREE(layout);
+		}
 	}
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewlayout));
@@ -175,19 +252,34 @@ int run(GList **config)
 	char *fn, *ptr;
 	FILE* fp;
 	GtkTreeModel *model = NULL;
-	GtkTreeIter iter;
-	char* selected;
+	GtkTreeIter iter, iter_parent;
+	char *type, *layout, *selected;
+	
 	GtkTreeSelection *selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(viewlayout));	
 	model = gtk_tree_view_get_model(GTK_TREE_VIEW(viewlayout));
 	
-	if(gtk_tree_selection_get_selected(selection, &model, &iter))
+	if (gtk_tree_selection_get_selected (selection, NULL, &iter))
 	{
-		gtk_tree_model_get (model, &iter, 0, &selected, -1);
+		gtk_tree_model_get (model, &iter, 0, &layout, -1);
+	  
+					
+		if(gtk_tree_model_iter_parent(model, &iter_parent, &iter) == FALSE)
+		{	
+			return(-1);
+		}
+		else
+		{
+			gtk_tree_model_get (model, &iter_parent, 0, &type, -1);
+		}	
 	}
+
+	selected = g_strdup_printf("%s/%s", type, layout);
+	FREE(type)
+	FREE(layout);
 	
 	if(strlen(selected) >= 7)
 		selected[strlen(selected)-7]='\0';
-
+	
 	LOG("selected layout '%s'", selected);
 	ptr = g_strdup_printf("loadkeys /usr/share/keymaps/i386/%s.map.gz", selected);
 	fw_system(ptr);

@@ -25,7 +25,6 @@
 
 #include "common.h"
 
-static GtkWidget *rootpass, *rootverify;
 static GtkWidget *userorigimg;
 
 enum
@@ -253,26 +252,9 @@ void add_user (GtkWidget *widget, gpointer data)
     }
 }
 
-//* Verify if password are correct *//
-void verify_password(GtkWidget *widget, gpointer data)
-{
-	char *pass1 = (char*)gtk_entry_get_text(GTK_ENTRY(widget));
-	char *pass2 = (char*)gtk_entry_get_text(GTK_ENTRY(data));
-	if(!strcmp(pass1, pass2))
-		set_page_completed();
-	else
-		set_page_incompleted();
-}
-		
-
 GtkWidget *load_gtk_widget()
 {
-	GtkWidget *hbox, *vboxp, *button, *info;	
-	//* For root entry end of page *//
-	GtkWidget *hboxroot1, *hboxroot2;
-	GtkWidget *rootlabel, *verifylabel;
-	
-	userorigimg = gtk_image_new_from_file("/usr/share/fwife/images/user.png");
+	GtkWidget *hboxbutton, *vboxp, *button, *info;	
 
 	GtkListStore *store;
 	GtkTreeModel *model;
@@ -281,13 +263,15 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *view;
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
+	GtkWidget *image;
+
+	userorigimg = gtk_image_new_from_file("/usr/share/fwife/images/user.png");
 	
 	// main vbox
 	vboxp = gtk_vbox_new(FALSE, 5);
-	hbox = gtk_hbox_new(FALSE, 5);	
-
+	
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Creating user accounts and set root password</b></span>\n"));	
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can configure non-root user account. It is strongly recommended to create one.</b></span>\n"));	
 
 	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);
@@ -345,61 +329,29 @@ GtkWidget *load_gtk_widget()
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), view);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-	GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
+	hboxbutton = gtk_hbox_new(FALSE, 5);
 
-	gtk_box_pack_start (GTK_BOX (hbox), pScrollbar, TRUE, TRUE, 5);
+	button = gtk_button_new_with_label (_("Add a new user"));
+        g_signal_connect (button, "clicked", G_CALLBACK (add_user), view);
+	image = gtk_image_new_from_file("/usr/share/fwife/images/adduser.png");
+	gtk_button_set_image(GTK_BUTTON(button), image);
+        gtk_box_pack_start (GTK_BOX (hboxbutton), button, TRUE, FALSE, 5);
 
-	button = gtk_button_new_from_stock (GTK_STOCK_ADD);
-        g_signal_connect (button, "clicked",
-                        G_CALLBACK (add_user), view);
-        gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 5);
-
-        button = gtk_button_new_from_stock (GTK_STOCK_REMOVE);
-        g_signal_connect (button, "clicked",
-                        G_CALLBACK (remove_user), view);
-        gtk_box_pack_start (GTK_BOX (vbox), button, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (vboxp), info, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (vboxp), hbox, TRUE, TRUE, 5);	
+        button = gtk_button_new_with_label (_("Remove a user"));
+        g_signal_connect (button, "clicked", G_CALLBACK (remove_user), view);
+	image = gtk_image_new_from_file("/usr/share/fwife/images/deluser.png");
+	gtk_button_set_image(GTK_BUTTON(button), image);
+        gtk_box_pack_start (GTK_BOX (hboxbutton), button, TRUE, FALSE, 5);
 	
-	hboxroot1 = gtk_hbox_new(FALSE, 5);
-	hboxroot2 = gtk_hbox_new(FALSE, 5);
-	rootlabel = gtk_label_new(_("Enter root password :  "));
-	verifylabel = gtk_label_new(_("Re-enter root password :  "));	
-	
-	rootpass = gtk_entry_new();
-	gtk_entry_set_visibility(GTK_ENTRY(rootpass), FALSE);
-	rootverify = gtk_entry_new();
-	gtk_entry_set_visibility(GTK_ENTRY(rootverify), FALSE);
-	g_signal_connect (rootverify, "changed",
-                        G_CALLBACK (verify_password), rootpass);
-	g_signal_connect (rootpass, "changed",
-                        G_CALLBACK (verify_password), rootverify);
-
-	gtk_box_pack_start (GTK_BOX (hboxroot1), rootlabel, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (hboxroot2), verifylabel, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (hboxroot1), rootpass, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (hboxroot2), rootverify, FALSE, FALSE, 5);	
-	
-	gtk_box_pack_start (GTK_BOX (vboxp), hboxroot1, FALSE, FALSE, 5);
-	gtk_box_pack_start (GTK_BOX (vboxp), hboxroot2, FALSE, FALSE, 5);
+	gtk_box_pack_start (GTK_BOX (vboxp), info, FALSE, FALSE, 3);
+	gtk_box_pack_start (GTK_BOX (vboxp), pScrollbar, TRUE, TRUE, 0);
+	gtk_box_pack_start (GTK_BOX (vboxp), hboxbutton, FALSE, TRUE, 5);
 	
 	return vboxp;
 }
 
 int run(GList **config)
 {
-	char *ptr = NULL, *pass;
-	
-	//* Set root password *//
-	pass = strdup((char*)gtk_entry_get_text(GTK_ENTRY(rootpass)));
-	if(strlen(pass))
-	{
-		ptr = g_strdup_printf("echo '%s:%s' |chroot %s /usr/sbin/chpasswd", "root", pass, TARGETDIR);
-		fw_system(ptr);
-		FREE(ptr);
-	}
-	FREE(pass);
 	return 0;
 }
  

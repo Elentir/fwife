@@ -35,10 +35,8 @@
 #include <libintl.h>
 #include <unistd.h>
 
-#include "setup.h"
+#include "fwife.h"
 #include "util.h"
-
-#define VERSIONFILE "/etc/frugalware-release"
 
 data_t *data_new(void)
 {
@@ -271,45 +269,6 @@ char *drop_version(char *str)
 	return(str);
 }
 
-GList *g_list_strremove(GList *list, char *str)
-{
-	int i;
-
-	for(i=0;i<g_list_length(list);i++)
-		if(!strcmp(g_list_nth_data(list, i), str))
-			return(g_list_remove(list, g_list_nth_data(list, i)));
-	return(NULL);
-}
-
-char *g_list_display(GList *list, char *sep)
-{
-	int i, len=0;
-	char *ret;
-
-	for (i=0; i<g_list_length(list); i++)
-	{
-		drop_version((char*)g_list_nth_data(list, i));
-		len += strlen((char*)g_list_nth_data(list, i));
-		len += strlen(sep)+1;
-	}
-	if(len==0)
-		return(NULL);
-	MALLOC(ret, len);
-	*ret='\0';
-	for (i=0; i<g_list_length(list); i++)
-	{
-		strcat(ret, (char*)g_list_nth_data(list, i));
-		strcat(ret, sep);
-	}
-	return(ret);
-}
-
-int msg(char *str)
-{
-	printf("\e[01;36m::\e[0m \e[01m%s\e[0m\n", str);
-	return(0);
-}
-
 int disable_cache(char *path)
 {
 	DIR *dir;
@@ -347,7 +306,7 @@ void signal_handler(int signum)
 	}
 }
 
-int setup_log(char *file, int line, char *fmt, ...)
+int fwife_log(char *file, int line, char *fmt, ...)
 {
 	static FILE *ldp = NULL, *lfp = NULL;
 	va_list args;

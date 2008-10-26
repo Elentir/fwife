@@ -519,7 +519,6 @@ void del_interface(GtkWidget *button, gpointer data)
     	}	
 }
 
-
 GtkWidget *load_gtk_widget()
 {
 	GtkWidget *pVBox, *pFrame, *pHBoxFrame, *pVBoxFrame, *phboxtemp, *labeltemp;
@@ -623,7 +622,7 @@ GtkWidget *load_gtk_widget()
 int prerun(GList **config)
 {
 	int i;
-	fwutil_i18ninit(__FILE__);
+	
 	if(iflist == NULL)
 	{
 		iflist = fwnet_iflist();

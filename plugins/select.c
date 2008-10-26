@@ -21,7 +21,6 @@
  */
 
 #include <stdio.h>
-#include <dialog.h>
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
@@ -604,7 +603,7 @@ GtkWidget *load_gtk_widget()
 	packetinfo = gtk_label_new(NULL);
 	gtk_label_set_justify(GTK_LABEL(packetinfo), GTK_JUSTIFY_LEFT);
 	// load a nice image
-	image = gtk_image_new_from_file("images/packet.png");
+	image = gtk_image_new_from_file("/usr/share/fwife/images/packet.png");
 	gtk_label_set_line_wrap(GTK_LABEL(packetinfo), TRUE);
 	
 	gtk_box_pack_start(GTK_BOX(phbox), categl, FALSE, TRUE, 0);

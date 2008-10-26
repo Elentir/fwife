@@ -21,13 +21,13 @@
  */
 
 #include <stdio.h>
-#include <dialog.h>
 #include <parted/parted.h>
 #include <string.h>
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <gtk/gtk.h>
+#include <unistd.h>
 
 #include "common.h"
 
@@ -524,7 +524,7 @@ int requestformat(char *namedev)
 {
 	
 	GSList *pList;
-   	char *sLabel;
+   	char *sLabel = NULL;
 	char *fs = NULL;
 	extern GtkWidget *assistant;
 	
@@ -1023,7 +1023,7 @@ GtkWidget *load_gtk_widget()
 	gtk_button_set_image(GTK_BUTTON(mainpart), image);
 	image = gtk_image_new_from_stock (GTK_STOCK_CONVERT, 3);
 	gtk_button_set_image(GTK_BUTTON(swappart), image);
-	image = gtk_image_new_from_file("images/gparted.png");
+	image = gtk_image_new_from_file("/usr/share/fwife/images/gparted.png");
 	gtk_button_set_image(GTK_BUTTON(gparted), image);
 	
 	//* connect button to the select root part function *//

@@ -66,7 +66,7 @@ char *desc()
 GList *getmirrors(char *fn)
 {
 	FILE *fp;
-	char line[PATH_MAX], *ptr, *country, *preferred;
+	char line[PATH_MAX], *ptr = NULL, *country = NULL, *preferred = NULL;
 	GList *mirrors=NULL;
 
 	if ((fp = fopen(fn, "r"))== NULL) { //fopen error
@@ -98,7 +98,7 @@ GList *getmirrors(char *fn)
 				mirrors = g_list_append(mirrors, strdup("Off")); //unchecked by default in checkbox
 		}
 	}
-	free(preferred);
+	FREE(preferred);
 	fclose(fp);
 	return (mirrors);
 }

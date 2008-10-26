@@ -33,7 +33,7 @@
 #include <sys/stat.h>
 #include <sys/mount.h>
 #include <libintl.h>
-#include <dialog.h>
+#include <unistd.h>
 
 #include "common.h"
 
@@ -592,10 +592,7 @@ int run(GList **config)
 	ptr = g_strdup_printf("umount %s/dev", TARGETDIR);
 	fw_system(ptr);
 	FREE(ptr);
-	ptr = g_strdup_printf("umount %s", TARGETDIR);
-	fw_system(ptr);
-	FREE(ptr);
-	
+		
 	return 0;
 }
  

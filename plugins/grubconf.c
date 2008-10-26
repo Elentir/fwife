@@ -96,7 +96,7 @@ GtkWidget *load_gtk_widget()
 int run(GList **config)
 {
 	GSList *pList;
-	const char *sLabel;
+	const char *sLabel = "";
 	int mode, needrelease;
 	int ret;
 	FILE *fp;

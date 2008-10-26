@@ -272,7 +272,7 @@ gboolean affiche_dessin(GtkWidget *dessin, GdkEventExpose *event, gpointer data)
 		char *total = g_strdup_printf("%s/%s",country, city);
 		
 		gint pos =  g_list_position(zonetime, g_list_find_custom(zonetime, total, cmp_str));
-		if(i>=0)
+		if(pos>0)
 		{
 			getcartesiancoords((char*)g_list_nth_data(zonetime, pos-1), &xcoord, &ycoord);
 			gdk_draw_rectangle(drawingmap->window, drawingmap->style->fg_gc[GTK_WIDGET_STATE(drawingmap)], TRUE, xcoord, ycoord, 3, 3);
@@ -358,7 +358,7 @@ GtkWidget *load_gtk_widget()
 	
 	drawingmap=gtk_drawing_area_new();
 
-	image = gdk_pixbuf_new_from_file("images/timemap.png", NULL);
+	image = gdk_pixbuf_new_from_file("/usr/share/fwife/images/timemap.png", NULL);
 	gtk_widget_set_size_request(drawingmap, gdk_pixbuf_get_width(image), gdk_pixbuf_get_height(image));
 	
 	g_signal_connect(G_OBJECT(drawingmap),"expose_event", (GCallback)affiche_dessin, NULL);	

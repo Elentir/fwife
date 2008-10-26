@@ -24,7 +24,7 @@
 #include <libintl.h>
 #include <glib.h>
 
-#include "../setup.h"
+#include "../fwife.h"
 #include "../util.h"
 
 plugin_t *info();

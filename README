@@ -1,32 +1,26 @@
 						Fwife : Frugalware Installer Frontend Readme
 
-Fwife 0.2 beta
+-> Fwife 0.2 beta
 
 Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
 
 This version only support netinstall because it's necessary for fwlive.
 
-Knows Bugs : 
+-> Knows Bugs :
 
-Select plugin : -> graphical bug with packet description label when description too long.
+select.c : * graphical bug with packet description label when description too long.
 
-Configsource plugin : -> No feedback during the download when using file:/// as a custom mirror
+configsource.c : * No feedback during the download when using file:/// as a custom mirror
 
-TODO for 0.3:
+-> Ideas :
 
-Partdisk plugin : -> add raid support
+* Improve gui (dialogbox for exemple)
+* Improve help (add tooltip text, etc...)
 
-General : -> Verify C code, remove useless parts, simplify code if possible !
-	  -> Need a local version working with gtk+-directfb library
+-> Compiling and testing : 
 
-Plugins : -> Cut some plugins into 2 for make it more simpler for newbies
+Just do a 'make' in source directory then do 'make install' and 'fwife'
 
-Ideas :
-
--> Improve gui (dialogbox for exemple)
--> Improve help (add tooltip text, etc...)
-
-Compiling and testing : Just do a 'make' in source directory then do './fwife' :p
 
 Any suggestions or patchs are welcome ;)
 

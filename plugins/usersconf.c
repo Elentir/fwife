@@ -272,7 +272,7 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *hboxroot1, *hboxroot2;
 	GtkWidget *rootlabel, *verifylabel;
 	
-	userorigimg = gtk_image_new_from_file("images/user.png");
+	userorigimg = gtk_image_new_from_file("/usr/share/fwife/images/user.png");
 
 	GtkListStore *store;
 	GtkTreeModel *model;

@@ -1,4 +1,7 @@
-CFLAGS += -g -Wall -Werror
+ifeq ($(DEBUG),yes)
+	CFLAGS += -Wall -g
+endif
+
 LDFLAGS += -lparted -ldl -lpacman -lvolume_id
 
 CFLAGS += $(shell pkg-config --cflags gtk+-2.0)
@@ -37,9 +40,6 @@ all: $(addsuffix .so,$(PLUGINS))
 
 clean:
 	rm -f *.so *.o
-
-test: all
-	cd ..; PATH=$$PATH:/sbin:/usr/sbin sudo ./setup
 
 %.so: %.o
 	$(CC) $(CFLAGS) -shared -Wl,-soname,$(basename $@).so -o \

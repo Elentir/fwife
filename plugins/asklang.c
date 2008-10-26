@@ -109,7 +109,7 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
 	GdkPixbuf *pix;
-	char path[15];	
+	char path[35];	
 	
 	// Create a tree view list for displaying languages
 	store = gtk_list_store_new(COLUMN_LANG_NUMS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
@@ -148,7 +148,7 @@ GtkWidget *load_gtk_widget()
 	for(i=0; i<(LANGSNUM*2); i+=2) 
 	{		
 		//load appropriate image
-		strcpy(path, "images/flags/");
+		strcpy(path, "/usr/share/fwife/images/flags/");
 		strcat(path, langs[i]);
 		pix = gdk_pixbuf_new_from_file (path, &gerror);
 		if(gerror != NULL) {

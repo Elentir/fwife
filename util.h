@@ -47,7 +47,7 @@
 	exit(1); }} else p = NULL; }
 #define FREE(p) { if (p) { free(p); (p) = NULL; }}
 
-#define LOG(fmt, args...) setup_log(__FILE__, __LINE__, fmt, ##args)
+#define LOG(fmt, args...) fwife_log(__FILE__, __LINE__, fmt, ##args)
 
 typedef struct
 {
@@ -66,12 +66,9 @@ int makepath(char *path);
 int rmrf(char *path);
 int umount_if_needed(char *sourcedir);
 char *drop_version(char *str);
-GList *g_list_strremove(GList *list, char *str);
-char *g_list_display(GList *list, char *sep);
-int msg(char *str);
 int disable_cache(char *path);
 void signal_handler(int signum);
-int setup_log(char *file, int line, char *fmt, ...);
+int fwife_log(char *file, int line, char *fmt, ...);
 void cb_log(unsigned short level, char *msg);
 char *fsize(int length);
 int cmp_str(gconstpointer a, gconstpointer b);

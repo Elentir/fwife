@@ -20,7 +20,6 @@
  */
 
 #include <stdio.h>
-#include <dialog.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
@@ -33,11 +32,10 @@
 static GtkWidget *progress;
 static GtkWidget *labelpkg;
 
-float	rate;
-int	offset;
+int offset;
 int howmany;
 int remains;
-char 	reponame[PM_DLFNM_LEN+1];
+char reponame[PM_DLFNM_LEN+1];
 
 plugin_t plugin =
 {
@@ -77,8 +75,8 @@ GtkWidget *load_gtk_widget()
 
 int progress_update(PM_NETBUF *ctl, int xferred, void *arg)
 {
-	int		size;
-	int		per;
+	int size;
+	int per;
 	char *name = NULL, *ptr = NULL;
 		
 	while (gtk_events_pending())
@@ -178,8 +176,7 @@ void progress_event (unsigned char event, void *data1, void *data2)
 			return;
 	}
 	gtk_label_set_label(GTK_LABEL(labelpkg), substr); 
-	FREE(substr);
-	
+	FREE(substr);	
 
 	return;
 }
@@ -198,11 +195,12 @@ int installpkgs(GList *pkgs)
 			printf("Failed to parse pacman-g2 configuration file (%s)", pacman_strerror(pm_errno));
 			return(-1);
 	}
+	
+	//* Set pacman options *//
 	pacman_set_option(PM_OPT_LOGMASK, -1);
 	pacman_set_option(PM_OPT_LOGCB, (long)cb_log);
 	pacman_set_option (PM_OPT_DLCB, (long)progress_update);
 	pacman_set_option (PM_OPT_DLOFFSET, (long)&offset);
-	pacman_set_option (PM_OPT_DLRATE, (long)&rate);
 	pacman_set_option (PM_OPT_DLFNM, (long)reponame);
 	pacman_set_option (PM_OPT_DLHOWMANY, (long)&howmany);
 	pacman_set_option (PM_OPT_DLREMAIN, (long)&remains);
@@ -245,7 +243,7 @@ int installpkgs(GList *pkgs)
 	}
 	
 	/* release the transaction */
-	pacman_trans_release ();
+	pacman_trans_release();
 	pacman_release();
 		
 	return 0;	

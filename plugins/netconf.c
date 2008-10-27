@@ -357,6 +357,7 @@ int dsl_config(fwnet_profile_t *profile)
 
 	phboxtemp = gtk_hbox_new(FALSE, 0);
 	labeltemp = gtk_label_new(_("Associate with interface : "));
+	gtk_box_pack_start(GTK_BOX(phboxtemp), labeltemp, FALSE, FALSE, 5);
 	GtkWidget *intercombodsl = gtk_combo_box_new_text();
 	gtk_box_pack_start(GTK_BOX(phboxtemp), intercombodsl, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);

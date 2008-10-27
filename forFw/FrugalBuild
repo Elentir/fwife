@@ -12,6 +12,6 @@ groups=('xapps-extra')
 archs=('i686')
 source=($url/$pkgname-$pkgver.tar.gz)
 up2date="lynx -dump $url | Flasttar"
-sha1sums=('566e051f7b77ed885e29784cc0097c0c8d7ad4ec')
+sha1sums=('430d3612a0de6d46634fec27f9614b27224cd9ea')
 
 # optimization OK

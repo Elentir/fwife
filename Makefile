@@ -1,6 +1,5 @@
 CC = gcc
 MAKE=make
-DEBUG = no
 SRC = $(wildcard *.c)
 
 OBJ = $(SRC:.c=.o)

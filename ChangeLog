@@ -1,4 +1,7 @@
 VERSION         DESCRIPTION
 -----------------------------------------------------------------------------
 0.2         - fixed lot of bugs
+	    - new plugin rootconf (separated from usersconf)
+	    - new icons
+	    - improve layout gtk widget
 0.1         - initial release

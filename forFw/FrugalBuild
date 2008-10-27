@@ -6,12 +6,12 @@ pkgname=fwife
 pkgver=0.2
 pkgrel=1
 pkgdesc="Gtk GUI Installer for Frugalware"
-url="http://utopia.toile-libre.org/upload/fwife/"
+url="http://utopia.toile-libre.org/$pkgname/"
 depends=('glibc' 'gtk+2' 'parted' 'pacman-g2>=3.5.5' 'frugalwareutils')
 groups=('xapps-extra')
 archs=('i686')
 source=($url/$pkgname-$pkgver.tar.gz)
-up2date=$pkgver
+up2date="lynx -dump $url | Flasttar"
 sha1sums=('b8d070651e62af873e6a5a0cd880c9a86b4d1ddd')
 
 # optimization OK

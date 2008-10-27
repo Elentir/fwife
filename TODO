@@ -1,4 +1,7 @@
-TODO list for Fwife
+TODO list for Fwife for 0.3
 --------------------
 
  * partdisk.c: add raid support
+
+ * userconf.c: add support of user's groups
+

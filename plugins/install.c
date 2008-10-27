@@ -140,8 +140,8 @@ void progress_install (unsigned char event, char *pkgname, int percent, int howm
 
 void progress_event (unsigned char event, void *data1, void *data2)
 {
-	char *substr = NULL;
-	
+	char *substr = NULL, *ptr = NULL;
+		
 	if (data1 == NULL)
 		return;
 	
@@ -172,11 +172,25 @@ void progress_event (unsigned char event, void *data1, void *data2)
 		case PM_TRANS_EVT_RETRIEVE_START:
 			substr = g_strdup_printf (_("Retrieving packages from %s"), (char*)data1);
 			break;
+		case PM_TRANS_EVT_RETRIEVE_LOCAL:
+			ptr = g_strdup_printf(_("Retrieving packages from local... (%d/%d) : %s" ),remains, howmany, drop_version((char*)data1));
+			gtk_progress_bar_set_text (GTK_PROGRESS_BAR(progress), ptr);
+			while (gtk_events_pending())
+				gtk_main_iteration ();
+			sleep(1);
+			FREE(ptr);
+			substr = NULL;
+			break;
 		default:
 			return;
 	}
-	gtk_label_set_label(GTK_LABEL(labelpkg), substr); 
-	FREE(substr);	
+	if(substr != NULL)
+		gtk_label_set_label(GTK_LABEL(labelpkg), substr); 
+	
+	FREE(substr);
+
+	while (gtk_events_pending())
+		gtk_main_iteration ();	
 
 	return;
 }

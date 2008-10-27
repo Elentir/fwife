@@ -10,8 +10,6 @@ This version only support netinstall because it's necessary for fwlive.
 
 select.c : * graphical bug with packet description label when description too long.
 
-configsource.c : * No feedback during the download when using file:/// as a custom mirror
-
 -> Ideas :
 
 * Improve gui (dialogbox for exemple)
@@ -19,7 +17,7 @@ configsource.c : * No feedback during the download when using file:/// as a cust
 
 -> Compiling and testing : 
 
-Just do a 'make' in source directory then do 'make install' and 'fwife'
+Just do a 'make' in source directory then do 'make install' and 'fwife'. For uninstalling, use 'make uninstall'
 
 
 Any suggestions or patchs are welcome ;)

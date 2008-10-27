@@ -12,6 +12,6 @@ groups=('xapps-extra')
 archs=('i686')
 source=($url/$pkgname-$pkgver.tar.gz)
 up2date=$pkgver
-sha1sums=('9736a025418d7491f3f93baef4d700674c54d54a')
+sha1sums=('188d4ea424f307ae165bcd224c5799236ebe1a90')
 
 # optimization OK

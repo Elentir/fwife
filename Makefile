@@ -6,7 +6,7 @@ SRC = $(wildcard *.c)
 OBJ = $(SRC:.c=.o)
 EXE = fwife
 
-BINDIR = /usr/bin
+BINDIR = /usr/bin/
 SHAREDIR = /usr/share/fwife
 
 ifeq ($(DEBUG),yes)
@@ -34,11 +34,10 @@ $(EXE): $(OBJ)
 	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS)
 
 install:
-	install -d -m0755 $(DESTDIR)$(PREFIX)$(SHAREDIR)
+	install -d -m0755 $(DESTDIR)$(PREFIX)$(BINDIR)
 	install -d -m0755 $(DESTDIR)$(PREFIX)$(SHAREDIR)/plugins
-	install -d -m0755 $(DESTDIR)$(PREFIX)$(SHAREDIR)/images
 	install -d -m0755 $(DESTDIR)$(PREFIX)$(SHAREDIR)/images/flags
-	install -m0755 fwife $(DESTDIR)$(PREFIX)$(BINDIR)/fwife
+	install -m0755 fwife $(DESTDIR)$(PREFIX)$(BINDIR)
 	install -m0644 plugins/*.so $(DESTDIR)$(PREFIX)$(SHAREDIR)/plugins
 	install -m0644 images/*.png $(DESTDIR)$(PREFIX)$(SHAREDIR)/images
 	install -m0644 images/flags/* $(DESTDIR)$(PREFIX)$(SHAREDIR)/images/flags

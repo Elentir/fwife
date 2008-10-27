@@ -6,7 +6,7 @@ SRC = $(wildcard *.c)
 OBJ = $(SRC:.c=.o)
 EXE = fwife
 
-BINDIR = /usr/bin/
+BINDIR = /usr/bin
 SHAREDIR = /usr/share/fwife
 
 ifeq ($(DEBUG),yes)

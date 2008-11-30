@@ -5,3 +5,7 @@ TODO list for Fwife for 0.3
 
  * userconf.c: add support of user's groups
 
+ * add support for NFS filesystem (new plugin)
+
+ * select.c : improve presentation of groups in basic mode (to make it more easy)
+

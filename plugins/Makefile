@@ -2,6 +2,9 @@ ifeq ($(DEBUG),yes)
 	CFLAGS += -Wall -g
 endif
 
+#fix for x86_64 version
+CFLAGS += -fPIC
+
 LDFLAGS += -lparted -ldl -lpacman -lvolume_id
 
 CFLAGS += $(shell pkg-config --cflags gtk+-2.0)

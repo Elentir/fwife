@@ -2,8 +2,11 @@ ifeq ($(DEBUG),yes)
 	CFLAGS += -Wall -g
 endif
 
-#fix for x86_64 version
+ifeq ($(shell arch),x86_64)
 CFLAGS += -fPIC
+endif
+
+CFLAGS += -DARCH="\"$(shell arch)\""
 
 LDFLAGS += -lparted -ldl -lpacman -lvolume_id
 

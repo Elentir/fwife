@@ -45,8 +45,6 @@
 #define PACCONF "frugalware"
 #endif
 
-#define ARCH "i686"
-
 #define EXGRPSUFFIX "-extra"
 
 #define SHARED_LIB_EXT ".so"

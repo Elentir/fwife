@@ -20,6 +20,8 @@ ifeq ($(DEBUG),yes)
 	CFLAGS += -Wall -g
 endif
 
+CFLAGS += -DARCH="\"$(shell arch)\""
+
 LDFLAGS += -ldl -rdynamic
 
 CFLAGS += $(shell pkg-config --cflags glib-2.0)

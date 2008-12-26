@@ -6,7 +6,12 @@ ifeq ($(shell arch),x86_64)
 CFLAGS += -fPIC
 endif
 
+#define arch directory
 CFLAGS += -DARCH="\"$(shell arch)\""
+#define plugin directory
+CFLAGS += -DPLUGINDIR="\"$(DESTDIR)$(LIBDIR)/plugins\""
+#define image directory
+CFLAGS += -DIMAGEDIR="\"$(DESTDIR)$(SHAREDIR)/images\""
 
 LDFLAGS += -lparted -ldl -lpacman -lvolume_id
 

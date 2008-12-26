@@ -39,17 +39,17 @@ static GtkWidget *view;
 char *langs[] =
 {
 	"en_US", "English",
-	"pt_BR", "Brazilian Portuguese / Portugu�s do Brasil",
+	"pt_BR", "Brazilian Portuguese / Português do Brasil",
 	"cs_CZ", "Czech / Cesky",
 	"da_DK", "Danish / Dansk",
 	"nl_NL", "Dutch / Nederlands",	
-	"fr_FR", "French / Fran�ais",
+	"fr_FR", "French / Français",
 	"de_DE", "German / Deutsch",
 	"hu_HU", "Hungarian / Magyar",
         "id_ID", "Indonesian / Bahasa Indonesia",
         "it_IT", "Italian / Italiano",
-	"ro_RO", "Romanian / Rom�n�",
-	"sk_SK", "Slovak / Sloven�ina",
+	"ro_RO", "Romanian / Românã",
+	"sk_SK", "Slovak / Slovenèina",
 	"sv_SE", "Swedish / Svenska"
 };
 

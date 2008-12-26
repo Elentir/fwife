@@ -358,7 +358,7 @@ GtkWidget *load_gtk_widget()
 	
 	drawingmap=gtk_drawing_area_new();
 
-	image = gdk_pixbuf_new_from_file("/usr/share/fwife/images/timemap.png", NULL);
+	image = gdk_pixbuf_new_from_file(g_strdup_printf("%s/timemap.png", IMAGEDIR), NULL);
 	gtk_widget_set_size_request(drawingmap, gdk_pixbuf_get_width(image), gdk_pixbuf_get_height(image));
 	
 	g_signal_connect(G_OBJECT(drawingmap),"expose_event", (GCallback)affiche_dessin, NULL);	

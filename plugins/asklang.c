@@ -39,17 +39,17 @@ static GtkWidget *view;
 char *langs[] =
 {
 	"en_US", "English",
-	"pt_BR", "Brazilian Portuguese / Português do Brasil",
+	"pt_BR", "Brazilian Portuguese / Portuguï¿½s do Brasil",
 	"cs_CZ", "Czech / Cesky",
 	"da_DK", "Danish / Dansk",
 	"nl_NL", "Dutch / Nederlands",	
-	"fr_FR", "French / Français",
+	"fr_FR", "French / Franï¿½ais",
 	"de_DE", "German / Deutsch",
 	"hu_HU", "Hungarian / Magyar",
         "id_ID", "Indonesian / Bahasa Indonesia",
         "it_IT", "Italian / Italiano",
-	"ro_RO", "Romanian / Românã",
-	"sk_SK", "Slovak / Slovenèina",
+	"ro_RO", "Romanian / Romï¿½nï¿½",
+	"sk_SK", "Slovak / Slovenï¿½ina",
 	"sv_SE", "Swedish / Svenska"
 };
 
@@ -109,8 +109,8 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
 	GdkPixbuf *pix;
-	char path[35];	
-	
+	char *path;
+		
 	// Create a tree view list for displaying languages
 	store = gtk_list_store_new(COLUMN_LANG_NUMS, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
@@ -148,15 +148,15 @@ GtkWidget *load_gtk_widget()
 	for(i=0; i<(LANGSNUM*2); i+=2) 
 	{		
 		//load appropriate image
-		strcpy(path, "/usr/share/fwife/images/flags/");
-		strcat(path, langs[i]);
-		pix = gdk_pixbuf_new_from_file (path, &gerror);
+		path = g_strdup_printf("%s/flags/%s", IMAGEDIR, langs[i]);
+		pix = gdk_pixbuf_new_from_file (path, &gerror);		
 		if(gerror != NULL) {
 			LOG("Error when loading image : %s", path);
 		}
 		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter);
 		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(view))), &iter,
 			0, pix, 1, g_locale_to_utf8(langs[i], -1, NULL, NULL, NULL), 2, g_locale_to_utf8(langs[i+1], -1, NULL, NULL, NULL), -1);
+		FREE(path);
 		g_object_unref(pix);
 	}
 

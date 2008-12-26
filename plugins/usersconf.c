@@ -265,7 +265,7 @@ GtkWidget *load_gtk_widget()
 	GtkTreeSelection *selection;
 	GtkWidget *image;
 
-	userorigimg = gtk_image_new_from_file("/usr/share/fwife/images/user.png");
+	userorigimg = gtk_image_new_from_file(g_strdup_printf("%s/user.png", IMAGEDIR));
 	
 	// main vbox
 	vboxp = gtk_vbox_new(FALSE, 5);
@@ -333,13 +333,13 @@ GtkWidget *load_gtk_widget()
 
 	button = gtk_button_new_with_label (_("Add a new user"));
         g_signal_connect (button, "clicked", G_CALLBACK (add_user), view);
-	image = gtk_image_new_from_file("/usr/share/fwife/images/adduser.png");
+	image = gtk_image_new_from_file(g_strdup_printf("%s/adduser.png", IMAGEDIR));
 	gtk_button_set_image(GTK_BUTTON(button), image);
         gtk_box_pack_start (GTK_BOX (hboxbutton), button, TRUE, FALSE, 5);
 
         button = gtk_button_new_with_label (_("Remove a user"));
         g_signal_connect (button, "clicked", G_CALLBACK (remove_user), view);
-	image = gtk_image_new_from_file("/usr/share/fwife/images/deluser.png");
+	image = gtk_image_new_from_file(g_strdup_printf("%s/deluser.png", IMAGEDIR));
 	gtk_button_set_image(GTK_BUTTON(button), image);
         gtk_box_pack_start (GTK_BOX (hboxbutton), button, TRUE, FALSE, 5);
 	

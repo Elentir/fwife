@@ -20,7 +20,12 @@ ifeq ($(DEBUG),yes)
 	CFLAGS += -Wall -g
 endif
 
+# define arch in src
 CFLAGS += -DARCH="\"$(shell arch)\""
+#define plugin directory
+CFLAGS += -DPLUGINDIR="\"$(DESTDIR)$(LIBDIR)/plugins\""
+#define image directory
+CFLAGS += -DIMAGEDIR="\"$(DESTDIR)$(SHAREDIR)/images\""
 
 LDFLAGS += -ldl -rdynamic
 
@@ -36,7 +41,7 @@ all: $(EXE)
 # Compilation d'objets
 %.o: %.c
 	$(CC) -c $^ -o $@ $(CFLAGS) $(LDFLAGS)
-	$(MAKE) -C plugins
+	$(MAKE) -C plugins SHAREDIR=$(SHAREDIR) LIBDIR=$(LIBDIR) DESTDIR=$(DESTDIR)
 
 # Compilation de l'executable
 $(EXE): $(OBJ)

@@ -36,7 +36,6 @@
 #define MKSWAP "/sbin/mkswap"
 #define SWAPON "/sbin/swapon"
 
-#define PLUGINDIR "/usr/lib/fwife/plugins"
 #define PACCONFPATH "/etc/pacman-g2/repos/"
 
 #ifndef STABLE

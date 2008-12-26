@@ -1,5 +1,6 @@
 VERSION         DESCRIPTION
 -----------------------------------------------------------------------------
+0.2.1	    - support x86_64
 0.2         - fixed lot of bugs
 	    - new plugin rootconf (separated from usersconf)
 	    - new icons

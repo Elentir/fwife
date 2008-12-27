@@ -1,7 +1,7 @@
 #! /bin/sh
 
-XConfig=/etc/X11/xorg.conf
-XTemp=/tmp/xorg.conf.new
+XConfig=$3/etc/X11/xorg.conf
+XTemp=$3/tmp/xorg.conf.new
 
 XkbModel="$(cat $XConfig | grep "Option \"XkbModel\"" | cut -f 4 -d "\"")"
 XkbLayout="$(cat $XConfig | grep "Option \"XkbLayout\"" | cut -f 4 -d "\"")"

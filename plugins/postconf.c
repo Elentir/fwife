@@ -550,7 +550,7 @@ void x_config(GtkWidget *button, gpointer data)
 				//* create /sysconfig/desktop file *//
 				write_dms(sDms);
 				//* change keyboard localisation *//
-				ptr = g_strdup_printf("chroot %s %s/xkeybchange %s %s", TARGETDIR, SCRIPTDIR, xlayout, xvariant);
+				ptr = g_strdup_printf("%s/xkeybchange %s %s %s", SCRIPTDIR, xlayout, xvariant, TARGETDIR);
 				fw_system(ptr);
 				FREE(ptr);
 				

@@ -1,6 +1,7 @@
 CC = gcc
 MAKE=make
 SRC = $(wildcard *.c)
+DEBUG=yes
 
 OBJ = $(SRC:.c=.o)
 EXE = fwife
@@ -17,11 +18,13 @@ SHAREDIR = $(PREFIX)/share/fwife
 LIBDIR = $(PREFIX)/lib/fwife
 
 ifeq ($(DEBUG),yes)
-	CFLAGS += -Wall -g
+	CFLAGS += -g
 endif
 
+CFLAGS += -Wall
+
 # define arch in src
-CFLAGS += -DARCH="\"$(shell arch)\""
+CFLAGS += -DARCH="\"$(shell arch)\"" 
 #define plugin directory
 CFLAGS += -DPLUGINDIR="\"$(DESTDIR)$(LIBDIR)/plugins\""
 #define image directory
@@ -51,10 +54,15 @@ install:
 	install -d -m0755 $(DESTDIR)$(BINDIR)
 	install -d -m0755 $(DESTDIR)$(LIBDIR)/plugins
 	install -d -m0755 $(DESTDIR)$(SHAREDIR)/images/flags
+	install -d -m0755 $(DESTDIR)$(SHAREDIR)/kmconf
+	install -d -m0755 $(DESTDIR)$(SHAREDIR)/scripts
 	install -m0755 fwife $(DESTDIR)$(BINDIR)
 	install -m0755 plugins/*.so $(DESTDIR)$(LIBDIR)/plugins
 	install -m0644 images/*.png $(DESTDIR)$(SHAREDIR)/images
 	install -m0644 images/flags/* $(DESTDIR)$(SHAREDIR)/images/flags
+	install -m0644 plugins/kmconf/* $(DESTDIR)$(SHAREDIR)/kmconf
+	install -m0755 plugins/scripts/* $(DESTDIR)$(SHAREDIR)/scripts
+	
 
 uninstall:
 	rm -rf $(SHAREDIR)

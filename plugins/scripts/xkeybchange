@@ -1,0 +1,35 @@
+#! /bin/sh
+
+XConfig=/etc/X11/xorg.conf
+XTemp=/tmp/xorg.conf.new
+
+XkbModel="$(cat $XConfig | grep "Option \"XkbModel\"" | cut -f 4 -d "\"")"
+XkbLayout="$(cat $XConfig | grep "Option \"XkbLayout\"" | cut -f 4 -d "\"")"
+
+if [ "$XkbModel" = "" ]; then
+sed '10,$s/Keyboard0/Keyboard1/' $XConfig > $XTemp
+if [ "$2" != "default" ]; then
+cat <<EOF>> $XTemp
+Section "InputDevice"
+        Identifier  "Keyboard0"
+        Driver      "kbd"
+	Option "XkbModel"   "$2"
+    	Option "XkbLayout"  "$1"
+EndSection
+EOF
+else
+cat <<EOF>> $XTemp
+Section "InputDevice"
+        Identifier  "Keyboard0"
+        Driver      "kbd"	
+    	Option "XkbLayout"  "$1"
+EndSection
+EOF
+fi
+cp $XTemp $XConfig
+
+else
+cp $XConfig $XTemp
+if [ "$1" != "" ]; then sed -r "s|$XkbLayout|$1|" $XConfig > $XTemp; cp $XTemp $XConfig; fi
+if [ "$2" != "default" ]; then sed -r "s|$XkbModel|$2|" $XConfig > $XTemp; cp $XTemp $XConfig; fi
+fi

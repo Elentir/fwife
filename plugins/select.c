@@ -80,18 +80,7 @@ void cb_db_register(char *section, PM_DB *db)
 	mydatabase = db;
 }
 
-int g_list_is_strin(char *needle, GList *haystack)
-{
-	int i;
-
-	for(i=0; i<g_list_length(haystack); i++)
-		if(g_list_nth_data(haystack, i) && !strcmp(g_list_nth_data(haystack, i), needle))
-			return(1);
-	return(0);
-}
-
-// 1: add pkgdesc and On for dialog; 0: don't add
-GList* group2pkgs(GList *syncs, char *group, int dialog)
+GList* group2pkgs(GList *syncs, char *group)
 {
 	PM_GRP *grp;
 	PM_LIST *pmpkgs, *lp, *junk;
@@ -103,7 +92,7 @@ GList* group2pkgs(GList *syncs, char *group, int dialog)
 
 	// add the core group to the start of the base list
 	if(!strcmp(group, "base"))
-		list = group2pkgs(syncs, "core", dialog);
+		list = group2pkgs(syncs, "core");
 
 	// get language suffix
 	lang = strdup(getenv("LANG"));
@@ -149,10 +138,11 @@ GList* group2pkgs(GList *syncs, char *group, int dialog)
 	{
 		PM_SYNCPKG *sync = pacman_list_getdata(lp);
 		PM_PKG *pkg = pacman_sync_getinfo(sync, PM_SYNC_PKG);
-		//printf("%s\n", pacman_pkg_getinfo(pkg, PM_PKG_NAME));
+		
 		pkgname = pacman_pkg_getinfo(pkg, PM_PKG_NAME);
 		pkgfullname = g_strdup_printf("%s-%s", (char*)pacman_pkg_getinfo(pkg, PM_PKG_NAME),
 			(char*)pacman_pkg_getinfo(pkg, PM_PKG_VERSION));
+		
 		// enable by default the packages in the
 		// frugalware repo + enable the
 		// language-specific parts from
@@ -162,24 +152,17 @@ GList* group2pkgs(GList *syncs, char *group, int dialog)
 			strlen(pkgname) >= strlen(lang) &&
 			!strcmp(pkgname + strlen(pkgname) -
 			strlen(lang), lang)) || !optional);
-		if(!dialog && addpkg && !g_list_is_strin(pkgfullname, list))
-			list = g_list_append(list, strdup(pkgfullname));
-		if(dialog && !g_list_is_strin(pkgfullname, list))
-		{
-			list = g_list_append(list, strdup(pkgfullname));
-			size = (double)(long)pacman_pkg_getinfo(pkg, PM_PKG_SIZE);
-			size = (double)(size/1048576.0);
-			if(size < 0.1)
-				size=0.1;
-			list = g_list_append(list, g_strdup_printf("%6.1f MB", size ));
-			list = g_list_append(list, strdup(pacman_pkg_getinfo(pkg, PM_PKG_DESC)));
-			if(addpkg)
-				list = g_list_append(list,
-					strdup("On"));
-			else
-				list = g_list_append(list,
-					strdup("Off"));
-		}
+		
+		// add the package to the list
+		list = g_list_append(list, strdup(pkgfullname));
+		size = (double)(long)pacman_pkg_getinfo(pkg, PM_PKG_SIZE);
+		size = (double)(size/1048576.0);
+		if(size < 0.1)
+			size=0.1;
+		list = g_list_append(list, g_strdup_printf("%6.1f MB", size ));
+		list = g_list_append(list, strdup(pacman_pkg_getinfo(pkg, PM_PKG_DESC)));
+		list = g_list_append(list, GINT_TO_POINTER(addpkg));
+		
 		FREE(pkgfullname);
 	}
 	pacman_trans_release();
@@ -258,18 +241,16 @@ GList *getcat(PM_DB *db, GList *syncs)
 			{
 				catlist = g_list_append(catlist, strdup(ptr));
 				catlist = g_list_append(catlist, categorysize(syncs, ptr));
-				catlist = g_list_append(catlist, strdup("On"));
+				catlist = g_list_append(catlist, GINT_TO_POINTER(1));
 			}
 			else if(strstr(ptr, EXGRPSUFFIX))
 			{
 				catlist = g_list_append(catlist, strdup(ptr));
 				catlist = g_list_append(catlist, categorysize(syncs, ptr));
 				if(strcmp(ptr, "locale-extra"))
-					catlist = g_list_append(catlist,
-						strdup("Off"));
+					catlist = g_list_append(catlist, GINT_TO_POINTER(0));
 				else
-					catlist = g_list_append(catlist,
-						strdup("On"));
+					catlist = g_list_append(catlist, GINT_TO_POINTER(1));
 			}
 	}
 
@@ -363,15 +344,13 @@ static void fixed_toggled_cat (GtkCellRendererToggle *cell,gchar *path_str, gpoi
 	if(fixed == FALSE)
 	{
 		GList *elem = g_list_nth(cats, i*3+2);
-		g_free(elem->data);	
-		elem->data = strdup("Off");
+		elem->data = GINT_TO_POINTER(0);
 		g_object_set (packetlist, "sensitive", FALSE, NULL);
 	}
 	else
 	{
 		GList *elem = g_list_nth(cats, i*3+2);
-		g_free(elem->data);	
-		elem->data = strdup("On");
+		elem->data = GINT_TO_POINTER(1);
 		g_object_set (packetlist, "sensitive", TRUE, NULL);
 	}
 	
@@ -403,11 +382,11 @@ static void fixed_toggled_pack (GtkCellRendererToggle *cell,gchar *path_str, gpo
 	i = gtk_tree_path_get_indices (path)[0];
 	
 	GList *elem = g_list_nth(packets_current, i*4+3);
-	g_free(elem->data);
+	
 	if(fixed == TRUE)
-		elem->data = strdup("On");
+		elem->data = GINT_TO_POINTER(1);
 	else
-		elem->data = strdup("Off");
+		elem->data = GINT_TO_POINTER(0);
 	
 	/* set new value */
 	gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, fixed, -1);
@@ -510,16 +489,8 @@ void categorie_changed(GtkTreeSelection *selection, gpointer data)
 	
 			for(i=0; i < g_list_length(packets_current); i+=4 ) 
 			{		
-				if(!strcmp((char*)g_list_nth_data(packets_current, i+3), "On"))
-				{
-					gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter);
-					gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter, 0, TRUE, 1, (char*)g_list_nth_data(packets_current, i), 2, (char*)g_list_nth_data(packets_current, i+1), -1);
-				}
-				else
-				{
-					gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter);
-					gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter, 0, FALSE, 1, (char*)g_list_nth_data(packets_current, i), 2, (char*)g_list_nth_data(packets_current, i+1), -1);
-				}
+				gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter);
+					gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter, 0, (gboolean)GPOINTER_TO_INT(g_list_nth_data(packets_current, i+3)), 1, (char*)g_list_nth_data(packets_current, i), 2, (char*)g_list_nth_data(packets_current, i+1), -1);
 			}
 		}
 		
@@ -723,7 +694,7 @@ int prerun(GList **config)
 	// preload packets list for each categorie
 	for(j=0;j < g_list_length(cats); j+=3)
 	{
-		pack = group2pkgs(syncs, (char*)g_list_nth_data(cats, j), 1);
+		pack = group2pkgs(syncs, (char*)g_list_nth_data(cats, j));
 		data_put(&allpackets, (char*)g_list_nth_data(cats, j), pack);
 	}
 	
@@ -737,16 +708,8 @@ int prerun(GList **config)
 	{		
 		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter);
 		
-		if(!strcmp((char*)g_list_nth_data(cats, j+2), "On"))
-		{
-			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter,
-				0, TRUE, 1, (char*)g_list_nth_data(cats, j), 2, (char*)g_list_nth_data(cats, j+1), -1);
-		}
-		else
-		{
-			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter,
-					   0, FALSE, 1, (char*)g_list_nth_data(cats, j), 2, (char*)g_list_nth_data(cats, j+1), -1);
-		}
+		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter,
+					   0, (gboolean)GPOINTER_TO_INT(g_list_nth_data(cats, j+2)), 1, (char*)g_list_nth_data(cats, j), 2, (char*)g_list_nth_data(cats, j+1), -1);		
 	}	
 	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 1.0);
 	
@@ -771,12 +734,12 @@ int run(GList **config)
 	//* For each checked packet, add it in list *//
 	for(i=0; i<g_list_length(cats); i+=3)
 	{
-		if(!strcmp((char*)g_list_nth_data(cats, i+2), "On"))
+		if(GPOINTER_TO_INT(g_list_nth_data(cats, i+2)) == 1)
 		{
 			GList *pkgs = (GList*)data_get(allpackets, (char*)g_list_nth_data(cats, i));
 			for(j=0; j<g_list_length(pkgs); j+=4)
 			{
-				if(!strcmp((char*)g_list_nth_data(pkgs, j+3), "On"))
+				if(GPOINTER_TO_INT(g_list_nth_data(pkgs, j+3)) == 1)
 					allpkgs = g_list_append(allpkgs, g_list_nth_data(pkgs, j));
 			}
 		}

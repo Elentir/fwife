@@ -65,7 +65,7 @@ void verify_password(GtkWidget *widget, gpointer data)
 
 GtkWidget *load_gtk_widget()
 {
-	GtkWidget *hbox, *vboxp, *info;	
+	GtkWidget *vboxp, *info;	
 	//* For root entry end of page *//
 	GtkWidget *hboxroot1, *hboxroot2;
 	GtkWidget *rootlabel, *verifylabel;

@@ -124,9 +124,7 @@ int updateconfig(char *fn, GList *mirrors)
 	return(0);
 }
 
-static void fixed_toggled (GtkCellRendererToggle *cell,
-	       gchar                 *path_str,
-	       gpointer               data)
+void fixed_toggled (GtkCellRendererToggle *cell, gchar *path_str, gpointer data)
 {
   GtkTreeModel *model = (GtkTreeModel *)data;
   GtkTreeIter  iter;

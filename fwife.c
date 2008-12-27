@@ -237,7 +237,7 @@ int ask_language()
 	gtk_window_set_deletable ( GTK_WINDOW ( pBoite ), FALSE );
 
 	
-	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file ("/usr/share/fwife/images/headlogo.png", NULL);
+	GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (g_strdup_printf("%s/headlogo.png", IMAGEDIR), NULL);
 	if(!pixbuf) 
 	{
 		fprintf(stdout, "error message: can't load images/headlogo.png\n");
@@ -294,7 +294,7 @@ int main (int argc, char *argv[])
   g_signal_connect (G_OBJECT (help), "clicked", G_CALLBACK (show_help), NULL);
   gtk_assistant_add_action_widget(GTK_ASSISTANT(assistant), help);
   /* Load a nice image */
-  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file ("/usr/share/fwife/images/headlogo.png", &gerror);
+  GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file (g_strdup_printf("%s/headlogo.png", IMAGEDIR), &gerror);
   if(!pixbuf) {
        fprintf(stdout, "error message: %s\n", gerror->message);
   }

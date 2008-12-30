@@ -34,7 +34,11 @@
 static GtkWidget *categories = NULL;
 static GtkWidget *packetlist = NULL;
 static GtkWidget *packetinfo = NULL;
-static GtkWidget *pvbox = NULL;
+static GtkWidget *pRadioKDE = NULL;
+static GtkWidget *vboxmode = NULL;
+
+//* Selected Mode : Expert 1 or Basic 0
+static int selectmode = 0;
 
 // need some list to stock to manipulate packets more easily
 static GList *syncs=NULL;
@@ -73,7 +77,7 @@ char *desc()
 	return _("Packages selection");
 }
 
-PM_DB *mydatabase;
+static PM_DB *mydatabase;
 
 void cb_db_register(char *section, PM_DB *db)
 {
@@ -154,7 +158,7 @@ GList* group2pkgs(GList *syncs, char *group)
 			strlen(lang), lang)) || !optional);
 		
 		// add the package to the list
-		list = g_list_append(list, strdup(pkgfullname));
+		list = g_list_append(list, strdup(pkgname));
 		size = (double)(long)pacman_pkg_getinfo(pkg, PM_PKG_SIZE);
 		size = (double)(size/1048576.0);
 		if(size < 0.1)
@@ -243,7 +247,7 @@ GList *getcat(PM_DB *db, GList *syncs)
 				catlist = g_list_append(catlist, categorysize(syncs, ptr));
 				catlist = g_list_append(catlist, GINT_TO_POINTER(1));
 			}
-			else if(strstr(ptr, EXGRPSUFFIX))
+			else if(strstr(ptr, EXGRPSUFFIX) || !strcmp(ptr, "lxde-desktop"))
 			{
 				catlist = g_list_append(catlist, strdup(ptr));
 				catlist = g_list_append(catlist, categorysize(syncs, ptr));
@@ -322,6 +326,9 @@ int prepare_pkgdb(char *repo, GList **config, GList **syncs)
 	return(0);
 }
 
+
+// ------------------------------------------------- Expert Mode functions -------------------------------------------- //
+
 //* A categorie as been toggled *//
 static void fixed_toggled_cat (GtkCellRendererToggle *cell,gchar *path_str, gpointer data)
 {
@@ -374,7 +381,7 @@ static void fixed_toggled_pack (GtkCellRendererToggle *cell,gchar *path_str, gpo
 	/* get toggled iter */
 	gtk_tree_model_get_iter (model, &iter, path);
 	gtk_tree_model_get (model, &iter, 0, &fixed, -1);
-	gtk_tree_model_get (model, &iter, 1, &name, -1);	
+	gtk_tree_model_get (model, &iter, 1, &name, -1);
   
 	/* do something with the value */
 	fixed ^= 1;
@@ -405,7 +412,7 @@ void packet_changed(GtkTreeSelection *selection, gpointer data)
 	gint i;
 	
 	treeview = gtk_tree_selection_get_tree_view (selection);
-		  		
+	
 	if (gtk_tree_selection_get_selected (selection, &model, &iter))
 	{
 		GtkTreePath *path = gtk_tree_model_get_path(model, &iter);
@@ -503,6 +510,25 @@ void categorie_changed(GtkTreeSelection *selection, gpointer data)
 	}	
 }
 
+void allselect_clicked(GtkWidget *button, gpointer boolselect)
+{
+	int i;
+	GtkTreeIter iter;
+
+	if(packets_current)
+	{
+		gtk_list_store_clear(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))));
+		for(i=0; i<g_list_length(packets_current); i+=4)
+		{
+			g_list_nth(packets_current, i+3)->data = boolselect;
+			gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter);
+			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(packetlist))), &iter, 0, (gboolean)boolselect, 1, (char*)g_list_nth_data(packets_current, i), 2, (char*)g_list_nth_data(packets_current, i+1), -1);
+		}
+	}
+}
+
+
+
 //* get a gtk tree list for categories *//
 GtkWidget *getcategorieslist()
 {
@@ -554,23 +580,31 @@ GtkWidget *getcategorieslist()
 	return pScrollbar;
 }
 
-//* Load main widget *//
-GtkWidget *load_gtk_widget()
+GtkWidget *getExpertModeWidget()
 {
-	GtkWidget *hsepa1, *hsepa2, *info;
+	GtkWidget *hsepa1, *hsepa2;
 	GtkWidget *image;
+		
 	GtkWidget *pvboxp = gtk_vbox_new(FALSE,5);
+	
 	GtkWidget *phbox = gtk_hbox_new(TRUE,8);
-	pvbox = gtk_vbox_new(FALSE,5);
+	GtkWidget *pvbox = gtk_vbox_new(FALSE,5);
 	GtkWidget *phbox2 = gtk_hbox_new(FALSE,8);
 	GtkWidget *categl = getcategorieslist();
 	GtkWidget *packetl = getpacketlist();
+	
+	GtkWidget *hboxbuttons = gtk_hbox_new(TRUE,5);
+	GtkWidget *buttonselect = gtk_button_new_with_label(_("Select all packages"));
+	GtkWidget *buttonunselect = gtk_button_new_with_label(_("Unselect all packages"));
+	g_signal_connect (buttonselect, "clicked", G_CALLBACK (allselect_clicked), GINT_TO_POINTER(1));
+	g_signal_connect (buttonunselect, "clicked", G_CALLBACK (allselect_clicked), GINT_TO_POINTER(0));
+	gtk_box_pack_start(GTK_BOX(hboxbuttons), buttonselect, FALSE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hboxbuttons), buttonunselect, FALSE, TRUE, 0);
+	
 	hsepa1 = gtk_hseparator_new();
 	hsepa2 = gtk_hseparator_new();
-	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>Please select which categories/packages to install</b></span>\n"));
 	
-	// description of each package (in expert mode only)
+	// description of each package
 	packetinfo = gtk_label_new(NULL);
 	gtk_label_set_justify(GTK_LABEL(packetinfo), GTK_JUSTIFY_LEFT);
 	// load a nice image
@@ -580,14 +614,333 @@ GtkWidget *load_gtk_widget()
 	gtk_box_pack_start(GTK_BOX(phbox), categl, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(phbox), pvbox, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), packetl, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxbuttons, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hsepa1, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(phbox2), image, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(phbox2), packetinfo, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), phbox2, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hsepa2, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), info, FALSE, FALSE, 0);
+	
 	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+
 	return pvboxp;
+}
+
+// --------------------------------------------- Basic Mode functions ----------------------------------------------- //
+
+//* select a categorie *//
+void selectcat(char *name, int bool)
+{
+	int i;
+	for(i=0; i<g_list_length(cats); i+=3)
+	{
+		if(!strcmp(g_list_nth_data(cats, i), name))
+		{
+			g_list_nth(cats, i+2)->data = GINT_TO_POINTER(bool);
+			return;
+		}
+	}
+}
+
+//* Select all file in a categorie *//
+void selectallfiles(char *cat, char *exception, int bool)
+{
+	int i;
+	GList *lispack;
+	
+	if(allpackets)
+	{
+		lispack = (GList*)data_get(allpackets, cat);
+		
+		if(exception == NULL)
+		{
+			for(i=0; i<g_list_length(lispack); i+=4)
+			{
+				g_list_nth(lispack, i+3)->data = GINT_TO_POINTER(bool);
+			}
+		}
+		else
+		{
+			for(i=0; i<g_list_length(lispack); i+=4)
+			{
+				if(strcmp(g_list_nth_data(lispack, i), exception))
+					g_list_nth(lispack, i+3)->data = GINT_TO_POINTER(bool);
+			}
+		}
+	}	
+}
+
+//* select (or unselect) a file 'name' in categorie 'cat' *//
+void selectfile(char *cat, char* name, int bool)
+{
+	int i;
+	GList *lispack;
+
+	if(allpackets)
+	{
+		lispack = (GList*)data_get(allpackets, cat);
+		
+		if(lispack)
+		{
+			for(i=0; i<g_list_length(lispack); i+=4)
+			{
+				if(!strcmp(name, (char *)g_list_nth_data(lispack, i)))
+				{
+					g_list_nth(lispack, i+3)->data = GINT_TO_POINTER(bool);
+					return;
+				}
+			}
+		}
+	}
+}
+
+//* set up desktop configuration *//
+void configuredesktop()
+{
+	GSList *pList;
+	char *seldesk = NULL;
+	
+	pList = gtk_radio_button_get_group(GTK_RADIO_BUTTON(pRadioKDE));
+	
+	//* Fix locale dependency *//
+	char *lang = strdup(getenv("LANG"));
+	char *ptr = rindex(lang, '_');
+	*ptr = '\0';
+	if(strcmp(lang ,"en"))
+	{
+		selectfile("locale-extra", g_strdup_printf("eric-i18n-%s", lang), 0);
+		selectfile("locale-extra", g_strdup_printf("eric4-i18n-%s", lang), 0);
+		selectfile("locale-extra", g_strdup_printf("hunspell-%s", lang), 0);
+		selectfile("locale-extra", g_strdup_printf("koffice-l10n-%s", lang), 0);
+		selectfile("locale-extra", g_strdup_printf("mbrola-%s", lang), 0);
+		selectfile("locale-extra", g_strdup_printf("kde-i18n-%s", lang), 0);
+	}
+
+	/* Parcours de la liste */
+	while(pList)
+	{
+		/* button selected? */
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(pList->data)))
+		{
+			/* get button label */
+			seldesk = strdup((char*)gtk_button_get_label(GTK_BUTTON(pList->data)));
+			/* Get out */			
+			pList = NULL;
+		}
+		else
+		{
+			/* next button */
+			pList = g_slist_next(pList);
+		}
+	}
+	
+	if(!strcmp(seldesk, "KDE"))
+	{
+		selectcat("gnome", 0);
+		selectcat("xfce4", 0);
+		selectfile("locale-extra", g_strdup_printf("koffice-l10n-%s", lang), 1);
+		selectfile("locale-extra", g_strdup_printf("kde-i18n-%s", lang), 1);
+	}
+	else if(!strcmp(seldesk, "Gnome"))
+	{
+		selectcat("kde", 0);
+		selectcat("xfce4", 0);
+	}
+	else if(!strcmp(seldesk, "XFCE"))
+	{
+		selectcat("kde", 0);
+		selectcat("gnome", 0);
+	}
+	else if(!strcmp(seldesk, "LXDE"))
+	{
+		selectcat("kde", 0);
+		selectcat("gnome", 0);
+		selectcat("xfce4", 0);
+		selectcat("lxde-desktop", 1);
+		selectallfiles("lxde-desktop", NULL, 1);
+	}
+	
+	FREE(lang);	
+	return;
+}
+
+//* set up group when selected or unselected *//
+void basicmode_change(GtkWidget *button, gpointer data)
+{
+	char *lang = strdup(getenv("LANG"));
+	char *ptr = rindex(lang, '_');
+	*ptr = '\0';
+	
+	if(!strcmp((char*)data, "NET"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+			selectcat("network", 1);
+		else
+			selectcat("network", 0);
+	}
+	else if(!strcmp((char*)data, "MUL"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("multimedia", 1);
+			selectcat("xmultimedia", 1);
+		}
+		else
+		{
+			selectcat("multimedia", 0);
+			selectcat("xmultimedia", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "DEV"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("devel", 1);
+		}
+		else
+		{
+			selectcat("devel", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "XAPP"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectallfiles("xapps", "openoffice.org", 1);
+			selectfile("locale-extra", g_strdup_printf("firefox-%s", lang), 1);
+			selectfile("locale-extra", g_strdup_printf("thunderbird-%s", lang), 1);
+		}
+		else
+		{
+			selectallfiles("xapps", "openoffice.org", 0);
+			selectfile("locale-extra", g_strdup_printf("firefox-%s", lang), 0);
+			selectfile("locale-extra", g_strdup_printf("thunderbird-%s", lang), 0);
+		}
+	}
+	else if(!strcmp((char*)data, "BUR"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectfile("xapps", "openoffice.org", 1);
+			if(strcmp(lang ,"en"))
+				selectfile("locale-extra", g_strdup_printf("openoffice.org-i18n-%s", lang), 1);
+		}
+		else
+		{
+			selectfile("xapps", "openoffice.org", 0);
+			char *lang = strdup(getenv("LANG"));
+			char *ptr = rindex(lang, '_');
+			*ptr = '\0';
+			if(strcmp(lang ,"en"))
+				selectfile("locale-extra", g_strdup_printf("openoffice.org-i18n-%s", lang), 0);
+		}
+	}
+	
+	return;
+}
+
+GtkWidget *getBasicModeWidget()
+{
+	GtkWidget *pvboxp = gtk_vbox_new(FALSE,5);
+	GtkWidget *pvbox, *hboxdesktop, *hboxtemp;
+	GtkWidget *logo;
+
+	GtkWidget *labelenv = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(labelenv), _("<b>Choose your desktop environnement :</b>"));
+	gtk_box_pack_start(GTK_BOX(pvboxp), labelenv, TRUE, TRUE, 0);
+	hboxdesktop = gtk_hbox_new(FALSE, 5);
+	
+	//* Desktop radio button *//
+	pvbox = gtk_vbox_new(FALSE,5);
+	pRadioKDE = gtk_radio_button_new_with_label(NULL, _("KDE"));
+	logo =  gtk_image_new_from_file(g_strdup_printf("%s/kdelogo.png", IMAGEDIR));
+	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
+	hboxtemp = gtk_hbox_new(FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioKDE, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
+
+	pvbox = gtk_vbox_new(FALSE,5);
+	GtkWidget *pRadioGNOME =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("GNOME"));
+	logo =  gtk_image_new_from_file(g_strdup_printf("%s/gnomelogo.png", IMAGEDIR));
+	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
+	hboxtemp = gtk_hbox_new(FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioGNOME, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
+
+	pvbox = gtk_vbox_new(FALSE,5);
+	GtkWidget *pRadioXFCE =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("XFCE"));
+	logo =  gtk_image_new_from_file(g_strdup_printf("%s/xfcelogo.png", IMAGEDIR));
+	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
+	hboxtemp = gtk_hbox_new(FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioXFCE, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
+
+	pvbox = gtk_vbox_new(FALSE,5);
+	GtkWidget *pRadioLXDE =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("LXDE"));
+	logo =  gtk_image_new_from_file(g_strdup_printf("%s/lxdelogo.png", IMAGEDIR));
+	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
+	hboxtemp = gtk_hbox_new(FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioLXDE, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
+	
+	gtk_box_pack_start(GTK_BOX(pvboxp), hboxdesktop, TRUE, TRUE, 0);
+
+	//* Other check button for other packages *//
+	GtkWidget *labelgroup = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(labelgroup), _("<b>Choose groups you want to install :</b>"));
+	gtk_box_pack_start(GTK_BOX(pvboxp), labelgroup, TRUE, TRUE, 0);
+	
+	GtkWidget *phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleApp =  gtk_check_button_new_with_label(_("Common application (Firefox, Thunderbird,...)"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleApp) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleApp), "toggled", G_CALLBACK(basicmode_change), (gpointer)"XAPP");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleApp, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleBur =  gtk_check_button_new_with_label(_("OpenOffice Suite"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleBur) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleBur), "toggled", G_CALLBACK(basicmode_change), (gpointer)"BUR");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleBur, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleNet =  gtk_check_button_new_with_label(_("Network"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleNet) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleNet), "toggled", G_CALLBACK(basicmode_change), (gpointer)"NET");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleNet, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleDev =  gtk_check_button_new_with_label(_("Development"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleDev) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleDev), "toggled", G_CALLBACK(basicmode_change), (gpointer)"DEV");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleDev, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleMul =  gtk_check_button_new_with_label(_("Multimedia"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleMul) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleMul), "toggled", G_CALLBACK(basicmode_change), (gpointer)"MUL");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleMul, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	
+	return pvboxp;
+}
+
+
+// ------------------------------------------- Main plugin functions -------------------------------------------- //
+
+//* Load main widget *//
+GtkWidget *load_gtk_widget()
+{
+	vboxmode = gtk_vbox_new(FALSE,5);
+
+	return vboxmode;
 }
 
 int prerun(GList **config)
@@ -599,16 +952,7 @@ int prerun(GList **config)
 	
 	GtkWidget* pBoite;
 	GtkWidget *progress, *vbox;
-	extern GtkWidget *assistant;	
-
-	switch(fwife_question(_("Do you want to use expert mode?\n\nThe normal mode shows a choice like 'C compiler system', the expert mode show you 'C libs', 'C compiler', 'C include files', etc - each individual package. Obviously, you should know what you're doing if you use the expert mode since it's possible to skip packages that are crucial to the functioning of your system. Choose 'no' for using normal mode that select groups of packages, or choose 'yes' for using expert mode with a switch for each package.")))
-	{
-		case GTK_RESPONSE_YES:
-			break;
-		case GTK_RESPONSE_NO:
-			gtk_widget_hide(pvbox);
-			break;
-	}
+	extern GtkWidget *assistant;
 	
 	pBoite = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_transient_for(GTK_WINDOW(pBoite), GTK_WINDOW(assistant));
@@ -624,21 +968,14 @@ int prerun(GList **config)
 
 	gtk_box_pack_start (GTK_BOX (vbox), progress, TRUE, FALSE, 5);
 	
-	gtk_container_add(GTK_CONTAINER(pBoite), vbox);	
+	gtk_container_add(GTK_CONTAINER(pBoite), vbox);
 	
-	gtk_widget_show_all(pBoite);
+	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Initializing pacman-g2"));	
+	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.0);	
+	gtk_widget_show_all(pBoite);	
 	
-	while (gtk_events_pending())
-		gtk_main_iteration ();	
-		
 	// if an instance of pacman running, set it down
 	pacman_release();
-
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Initializing pacman-g2"));	
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.0);
-	
-	while (gtk_events_pending())
-		gtk_main_iteration ();
 
 	// Initialize pacman
 	if(pacman_initialize(TARGETDIR) == -1)
@@ -654,11 +991,7 @@ int prerun(GList **config)
 		LOG("failed to set option DBPATH (%s)\n", pacman_strerror(pm_errno));
 		return(1);
 	}
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.1);
-	
-	while (gtk_events_pending())
-		gtk_main_iteration ();	
-	
+		
 	// Register with local database
 	i = pacman_db_register("local");
 	if(i==NULL)
@@ -669,14 +1002,17 @@ int prerun(GList **config)
 	else
 		syncs = g_list_append(syncs, i);	
 		
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.1);
-	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Udpate and load database"));
+	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.3);
+	while (gtk_events_pending())
+		gtk_main_iteration ();
+	
 	if(prepare_pkgdb(PACCONF, config, &syncs) == -1)
 	{
 		return(-1);
 	}
 	
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.3);
+	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.5);
+	gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), _("Udpate and load database"));
 	while (gtk_events_pending())
 		gtk_main_iteration ();
 
@@ -686,8 +1022,7 @@ int prerun(GList **config)
 	{
 		return(-1);
 	}
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.7);	
-	
+	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.8);
 	while (gtk_events_pending())
 		gtk_main_iteration ();
 
@@ -698,27 +1033,37 @@ int prerun(GList **config)
 		data_put(&allpackets, (char*)g_list_nth_data(cats, j), pack);
 	}
 	
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 0.9);
-	
-	while (gtk_events_pending())
-		gtk_main_iteration ();
-
-	// add cats in treeview list
-	for(j=0; j < g_list_length(cats); j+=3) 
-	{		
-		gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter);
-		
-		gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter,
-					   0, (gboolean)GPOINTER_TO_INT(g_list_nth_data(cats, j+2)), 1, (char*)g_list_nth_data(cats, j), 2, (char*)g_list_nth_data(cats, j+1), -1);		
-	}	
-	gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR(progress), 1.0);
-	
-	while (gtk_events_pending())
-		gtk_main_iteration ();	
-	
 	gtk_widget_destroy(pBoite);
-				
-	return(0);	
+
+	//* Load plugin dynamicly to save memory *//
+	GtkWidget *mode;
+	switch(fwife_question(_("Do you want to use expert mode?\n\nThe normal mode shows a choice like 'C compiler system', the expert mode show you 'C libs', 'C compiler', 'C include files', etc - each individual package. Obviously, you should know what you're doing if you use the expert mode since it's possible to skip packages that are crucial to the functioning of your system. Choose 'no' for using normal mode that select groups of packages, or choose 'yes' for using expert mode with a switch for each package.")))
+	{
+		case GTK_RESPONSE_YES:			
+			mode = getExpertModeWidget();
+			gtk_box_pack_start(GTK_BOX(vboxmode), mode, TRUE, TRUE, 0);
+			gtk_widget_show_all(vboxmode);
+			selectmode = 1;
+			
+			// add cats in treeview list
+			for(j=0; j < g_list_length(cats); j+=3) 
+			{		
+				gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter);
+		
+				gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))), &iter,
+						   0, (gboolean)GPOINTER_TO_INT(g_list_nth_data(cats, j+2)), 1, (char*)g_list_nth_data(cats, j), 2, (char*)g_list_nth_data(cats, j+1), -1);
+			}
+			
+			break;
+		case GTK_RESPONSE_NO:
+			selectmode = 0;
+			mode = getBasicModeWidget();
+			gtk_box_pack_start(GTK_BOX(vboxmode), mode, TRUE, TRUE, 0);
+			gtk_widget_show_all(vboxmode);
+			break;
+	}
+	
+	return(0);
 }
 	
 int run(GList **config)
@@ -727,9 +1072,16 @@ int run(GList **config)
 	PM_LIST *lp, *junk, *sorted, *x;
 	char *ptr;
 	GList *allpkgs = NULL;
-	
+		
 	if(cats == NULL)
 		return -1;
+	
+	if(selectmode == 0)
+		configuredesktop();
+	
+	//* Check for missing dependency *//
+	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, PM_TRANS_FLAG_NOCONFLICTS, NULL, NULL, NULL) == -1)
+		return(-1);
 	
 	//* For each checked packet, add it in list *//
 	for(i=0; i<g_list_length(cats); i+=3)
@@ -740,22 +1092,14 @@ int run(GList **config)
 			for(j=0; j<g_list_length(pkgs); j+=4)
 			{
 				if(GPOINTER_TO_INT(g_list_nth_data(pkgs, j+3)) == 1)
-					allpkgs = g_list_append(allpkgs, g_list_nth_data(pkgs, j));
+				{
+					ptr = strdup((char*)g_list_nth_data(pkgs, j));
+					pacman_trans_addtarget(ptr);
+					FREE(ptr);
+				}
 			}
 		}
-	}	
-
-	//* Check for missing dependency *//
-	if(pacman_trans_init(PM_TRANS_TYPE_SYNC, PM_TRANS_FLAG_NOCONFLICTS, NULL, NULL, NULL) == -1)
-		return(-1);
-	for(i=0;i<g_list_length(allpkgs);i++)
-	{
-		ptr = strdup(drop_version((char*)g_list_nth_data(allpkgs, i)));
-		pacman_trans_addtarget(ptr);		
-		FREE(ptr);
 	}
-	g_list_free(allpkgs);
-	allpkgs=NULL;
 		
 	if(pacman_trans_prepare(&junk) == -1) {
 		LOG("pacman-g2 error: %s", pacman_strerror(pm_errno));

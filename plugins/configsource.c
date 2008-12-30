@@ -93,9 +93,9 @@ GList *getmirrors(char *fn)
 			mirrors = g_list_append(mirrors, strdup(ptr));
 			mirrors = g_list_append(mirrors, strdup(country));
 			if(!strncmp(ptr, preferred, strlen(preferred)))
-				mirrors = g_list_append(mirrors, strdup("On"));
+				mirrors = g_list_append(mirrors, GINT_TO_POINTER(1));
 			else
-				mirrors = g_list_append(mirrors, strdup("Off")); //unchecked by default in checkbox
+				mirrors = g_list_append(mirrors, GINT_TO_POINTER(0)); //unchecked by default in checkbox
 		}
 	}
 	FREE(preferred);
@@ -313,8 +313,7 @@ int prerun(GList **config)
 	GtkTreeIter iter;
 	char *fn;
 	int i;
-	gboolean checked;
-
+	
 	switch(fwife_question(_("You need an active internet connection ,\n do you want to configure your network now?")))
 	{
 		case GTK_RESPONSE_YES:
@@ -332,13 +331,10 @@ int prerun(GList **config)
 
 		for(i=0; i < g_list_length(mirrorlist); i+=3) 
 		{		
-			checked = FALSE;
-			if(!strcmp((char*)g_list_nth_data(mirrorlist, i+2), "On"))
-				checked = TRUE;
 			gtk_list_store_append(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewserver))), &iter);
 		
 			gtk_list_store_set(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(viewserver))), &iter,
-				0, checked,1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
+				0, (gboolean)(GPOINTER_TO_INT(g_list_nth_data(mirrorlist, i+2))),1, (gchar*)g_list_nth_data(mirrorlist, i), 2,(gchar*)g_list_nth_data(mirrorlist, i+1), -1);	
 		
 		}
 	}

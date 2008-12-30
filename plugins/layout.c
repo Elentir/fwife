@@ -55,7 +55,7 @@ plugin_t plugin =
 	GTK_ASSISTANT_PAGE_CONTENT,
 	FALSE,
 	NULL,
-	NULL,
+	prerun,
 	run,
 	NULL // dlopen handle
 };
@@ -206,8 +206,7 @@ void add_console_layout(GtkWidget *combo)
 	int i;
 	for(i=0; i<g_list_length(consolekeymap);i++)
 	{
-		if(strcmp(g_list_nth_data(consolekeymap, i), ""))
-			gtk_combo_box_append_text(GTK_COMBO_BOX(combo), g_list_nth_data(consolekeymap, i));
+		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), g_list_nth_data(consolekeymap, i));
 	}
 	return;
 }
@@ -217,8 +216,7 @@ void add_x_layout(GtkWidget *combo)
 	int i;
 	for(i=0; i<g_list_length(xkeymap);i++)
 	{
-		if(strcmp(g_list_nth_data(xkeymap, i), "\n"))
-			gtk_combo_box_append_text(GTK_COMBO_BOX(combo), g_list_nth_data(xkeymap, i));
+		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), g_list_nth_data(xkeymap, i));
 	}
 	return;
 }
@@ -415,10 +413,6 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pScrollbar, *pvbox;
 	GtkTreeSelection *selection;
 		
-	//* Load keymaps use for personalized keyboard *//
-	find_console_layout(CKEYDIR);
-	find_x_layout(XKEYDIR);
-
 	store = gtk_tree_store_new(4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
@@ -454,9 +448,6 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_column_set_title(col, "Console keymap");
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);
 	
-	//* Loads keymaps from files *//
-	find(KEYDIR);
-	
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewlayout));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);	
       
@@ -489,6 +480,18 @@ GtkWidget *load_gtk_widget()
 	return pvbox;
 }
 
+int prerun(GList **config)
+{
+	//* Load keymaps use for personalized keyboard *//
+	find_console_layout(CKEYDIR);
+	find_x_layout(XKEYDIR);
+
+	//* Loads keymaps from files *//
+	find(KEYDIR);	
+
+	return 0;
+}
+
 int run(GList **config)
 {
 	char *fn, *ptr;
@@ -504,12 +507,6 @@ int run(GList **config)
 	{
 		gtk_tree_model_get (model, &iter, 1, &xlayout, 2, &xvariant, 3, &laycons, -1);	
 	}
-
-	//* Load key TODO : USefull in x environnement? *//
-	LOG("selected layout '%s'", laycons);
-	ptr = g_strdup_printf("loadkeys /usr/share/keymaps/i386/%s.map.gz", laycons);
-	fw_system(ptr);
-	FREE(ptr);
 
 	//* Create /sysconfig/keymap temporary file *//
 	fn = strdup("/tmp/setup_XXXXXX");

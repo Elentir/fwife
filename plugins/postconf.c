@@ -620,6 +620,7 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	pButtonX = gtk_button_new_with_label(_("Configure"));
 	g_signal_connect(G_OBJECT(pButtonX), "clicked", G_CALLBACK(x_config), pLabelXStatus);
 	gtk_box_pack_start(GTK_BOX(pHBoxFrameX), pButtonX, TRUE, FALSE, 0);
+	gtk_widget_set_sensitive(pHBoxFrameX, FALSE);
 
 	gtk_box_pack_start(GTK_BOX(pVBoxFrame), pHBoxFrameX, TRUE, FALSE, 5);
 	
@@ -641,9 +642,9 @@ int prerun(GList **config)
 
 	//* disable x configuration if no x server detected *//
 	ptr = g_strdup_printf("%s/usr/bin/X", TARGETDIR);
-	if(stat(ptr, &buf))
+	if(!stat(ptr, &buf))
 	{
-		 gtk_widget_set_sensitive(pHBoxFrameX, FALSE);
+		 gtk_widget_set_sensitive(pHBoxFrameX, TRUE);
 	}
 
 	return 0;

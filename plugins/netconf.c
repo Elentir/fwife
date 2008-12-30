@@ -180,8 +180,10 @@ int configure_wireless(fwnet_interface_t *interface)
 			GTK_WINDOW(assistant),
 			GTK_DIALOG_MODAL,
       			GTK_STOCK_OK,GTK_RESPONSE_OK,
+			GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,
        			NULL);
 
+	phboxtemp = gtk_hbox_new(FALSE, 5);
 	GtkWidget *labelinfo = gtk_label_new(_("In order to use wireless, you must set your extended netwok name (ESSID).\n"
 						"If you have a WEP encryption key, then please enter it below.\n"
 						"Examples: 4567-89AB-CD or s:password\n"
@@ -189,7 +191,10 @@ int configure_wireless(fwnet_interface_t *interface)
 						"Example: secret\n"
 						"If you want to use a custom driver (not the generic one, called 'wext'), then please enter it below.\n"
 						"If unsure enter nothing"));
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), labelinfo, FALSE, FALSE, 5);
+	GtkWidget *imagewifi = gtk_image_new_from_file(g_strdup_printf("%s/wifi.png", IMAGEDIR));
+	gtk_box_pack_start(GTK_BOX(phboxtemp), imagewifi, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(phboxtemp), labelinfo, TRUE, TRUE, 5);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(pBoite)->vbox), phboxtemp, FALSE, FALSE, 5);
 	
 	phboxtemp = gtk_hbox_new(FALSE, 0);
 	labeltemp = gtk_label_new(_("Essid : "));
@@ -647,7 +652,7 @@ int run(GList **config)
 	if((newprofile = (fwnet_profile_t*)malloc(sizeof(fwnet_profile_t))) == NULL)
 		return(1);
 	memset(newprofile, 0, sizeof(fwnet_profile_t));
-		
+	
 	sprintf(newprofile->name, "default");
 	for(i = 1; i<g_list_length(interfaceslist); i+=2)
 	{

@@ -39,7 +39,8 @@
 
 static GtkWidget *pHBoxFrameX = NULL;
 
-static char *xlayout, *xvariant;
+static char *xlayout = NULL;
+static char *xvariant = NULL;
 
 plugin_t plugin =
 {

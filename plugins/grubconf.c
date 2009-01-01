@@ -42,7 +42,7 @@ plugin_t plugin =
 {
 	"grubconfig",
 	desc,
-	55,
+	52,
 	load_gtk_widget,
 	GTK_ASSISTANT_PAGE_CONTENT,
 	TRUE,

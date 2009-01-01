@@ -70,9 +70,9 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pLabelInfo=gtk_label_new(NULL);
 
 	/* On utilise les balises */
-	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\"><b>Installing GRUB bootloader</b></span>\n"));
+	gtk_label_set_markup(GTK_LABEL(pLabelInfo), _("<span face=\"Courier New\"><b>Installing GRUB bootloader</b></span>"));
 	
-	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pVBox), pLabelInfo, FALSE, FALSE, 6);
 
 	GtkWidget *pLabel = gtk_label_new(_("Choose install type :"));
 	gtk_box_pack_start(GTK_BOX(pVBox), pLabel, FALSE, FALSE, 5);

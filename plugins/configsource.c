@@ -264,7 +264,7 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pVBox = gtk_vbox_new(FALSE, 0);
 
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can choose one or more nearly mirrors to speed up package downloading.</b></span>\n"));
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can choose one or more nearly mirrors to speed up package downloading.</b></span>"));
 
 	gtk_box_pack_start (GTK_BOX (pVBox), info, FALSE, FALSE, 5);
 

@@ -271,7 +271,7 @@ GtkWidget *load_gtk_widget()
 	vboxp = gtk_vbox_new(FALSE, 5);
 	
 	info = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can configure non-root user account. It is strongly recommended to create one.</b></span>\n"));	
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can configure non-root user account. It is strongly recommended to create one.</b></span>"));	
 
 	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, GDK_TYPE_PIXBUF);
 	model = GTK_TREE_MODEL(store);
@@ -302,6 +302,7 @@ GtkWidget *load_gtk_widget()
 	
 	renderer = gtk_cell_renderer_pixbuf_new();
 	col = gtk_tree_view_column_new_with_attributes (_("Password"), renderer, "pixbuf", COLUMN_USR_PASS, NULL);
+	gtk_tree_view_column_set_alignment  (col, 0.5);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
@@ -326,7 +327,7 @@ GtkWidget *load_gtk_widget()
 	gtk_button_set_image(GTK_BUTTON(button), image);
         gtk_box_pack_start (GTK_BOX (hboxbutton), button, TRUE, FALSE, 5);
 	
-	gtk_box_pack_start (GTK_BOX (vboxp), info, FALSE, FALSE, 3);
+	gtk_box_pack_start (GTK_BOX (vboxp), info, FALSE, FALSE, 6);
 	gtk_box_pack_start (GTK_BOX (vboxp), pScrollbar, TRUE, TRUE, 0);
 	gtk_box_pack_start (GTK_BOX (vboxp), hboxbutton, FALSE, TRUE, 5);
 	

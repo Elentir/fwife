@@ -586,8 +586,13 @@ GtkWidget *load_gtk_widget(GtkWidget *assist)
 	GtkWidget *pHBoxFrame, *pVBoxFrame;
 	GtkWidget *pLabelMouse, *pLabelMouseStatus, *pButtonMouse;
 	GtkWidget *pLabelX, *pLabelXStatus, *pButtonX;
+	GtkWidget *info;
 		
 	pVBox = gtk_vbox_new(FALSE, 0);
+
+	info = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can configure some parts of your system</b></span>"));
+	gtk_box_pack_start(GTK_BOX(pVBox), info, FALSE, FALSE, 6);
 
 	pFrame = gtk_frame_new(_("Hardware"));
 	gtk_box_pack_start(GTK_BOX(pVBox), pFrame, FALSE, FALSE, 5);
@@ -634,20 +639,19 @@ int prerun(GList **config)
 	struct stat buf;
 	char *ptr;
 
-	xlayout = (char*)data_get(*config, "xlayout");
-	xvariant = (char*)data_get(*config, "xvariant");
-
-	// configure kernel modules	
-	ptr = g_strdup_printf("chroot %s /sbin/depmod -a", TARGETDIR);
-	fw_system(ptr);
-	FREE(ptr);
-
 	//* disable x configuration if no x server detected *//
 	ptr = g_strdup_printf("%s/usr/bin/X", TARGETDIR);
 	if(!stat(ptr, &buf))
 	{
-		 gtk_widget_set_sensitive(pHBoxFrameX, TRUE);
+		gtk_widget_set_sensitive(pHBoxFrameX, TRUE);
+		xlayout = (char*)data_get(*config, "xlayout");
+		xvariant = (char*)data_get(*config, "xvariant");
 	}
+
+	// configure kernel modules	
+	ptr = g_strdup_printf("chroot %s /sbin/depmod -a", TARGETDIR);
+	fw_system(ptr);
+	FREE(ptr);	
 
 	return 0;
 }

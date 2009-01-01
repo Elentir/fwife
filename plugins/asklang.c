@@ -117,8 +117,8 @@ GtkWidget *load_gtk_widget()
 	
 	view = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
-	
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
+
 	//* Column for flag *//
 	renderer = gtk_cell_renderer_pixbuf_new();
 	col = gtk_tree_view_column_new_with_attributes (_("Flag"), renderer, "pixbuf", COLUMN_LANG_FLAG, NULL);

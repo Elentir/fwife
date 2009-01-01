@@ -530,17 +530,24 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pVBox, *pFrame, *pHBoxFrame, *pVBoxFrame, *phboxtemp, *labeltemp;
 	GtkWidget *hboxview;
 	GtkWidget *labelinfo, *labeldesc;
+	GtkWidget *info;
+
+	GtkListStore *store;
+	GtkTreeModel *model;
+	GtkTreeViewColumn *col;
+	GtkCellRenderer *renderer;
 	
 	pVBoxFrame = gtk_vbox_new(FALSE, 0);
 	pHBoxFrame = gtk_hbox_new(FALSE, 0);
 	pVBox = gtk_vbox_new(FALSE, 0);
 	hboxview = gtk_hbox_new(FALSE, 0);
 	
-	GtkListStore *store;
-	GtkTreeModel *model;
-	GtkTreeViewColumn *col;
-	GtkCellRenderer *renderer;
-						
+	info = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can configure all network interfaces you need</b></span>"));
+	gtk_box_pack_start(GTK_BOX(pVBox), info, FALSE, FALSE, 5);
+
+	gtk_box_pack_start (GTK_BOX (pVBox), info, FALSE, FALSE, 5);
+
 	store = gtk_list_store_new(6, GDK_TYPE_PIXBUF, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
@@ -548,50 +555,32 @@ GtkWidget *load_gtk_widget()
 	g_object_unref (model);
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(viewif), TRUE);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_NET_IMAGE, NULL);
-	gtk_tree_view_column_set_title(col, "");
+	col = gtk_tree_view_column_new_with_attributes ("", renderer, "pixbuf", COLUMN_NET_IMAGE, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NAME, NULL);
-	gtk_tree_view_column_set_title(col, _("Device"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
-	
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_IP, NULL);
-	gtk_tree_view_column_set_title(col, _("Ip Address"));
+	col = gtk_tree_view_column_new_with_attributes (_("Device"), renderer, "text", COLUMN_NET_NAME, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NETMASK, NULL);
-	gtk_tree_view_column_set_title(col, _("Netmask"));
+	col = gtk_tree_view_column_new_with_attributes (_("Ip Address"), renderer, "text", COLUMN_NET_IP, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_GATEWAY, NULL);
-	gtk_tree_view_column_set_title(col, _("Gateway"));
+	col = gtk_tree_view_column_new_with_attributes (_("Netmask"), renderer, "text", COLUMN_NET_NETMASK, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_NET_NAMESERV, NULL);
-	gtk_tree_view_column_set_title(col, _("DHCP Nameserver"));
+	col = gtk_tree_view_column_new_with_attributes (_("Gateway"), renderer, "text", COLUMN_NET_GATEWAY, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
+
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("DHCP Nameserver"), renderer, "text", COLUMN_NET_NAMESERV, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(viewif), col);
 	
 	gtk_box_pack_start(GTK_BOX(hboxview), viewif, TRUE, TRUE, 10);
-	gtk_box_pack_start(GTK_BOX(pVBox), hboxview, TRUE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(pVBox), hboxview, TRUE, TRUE, 5);
 	
 	pFrame = gtk_frame_new(_("Network configuration"));
 	gtk_container_add(GTK_CONTAINER(pFrame), pVBoxFrame);

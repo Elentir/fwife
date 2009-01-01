@@ -3,7 +3,7 @@ VERSION         DESCRIPTION
 0.3	    - new basic selection of packages and improve expert mode
 	    - optimization of package selection plugin
 	    - new layout plugin with preconfigured keyboards
-	    - new postconf plugin to bring together all configuration box
+	    - new postconf plugin to bring together all configuration dialogboxes
 0.2.1	    - support x86_64
 0.2         - fixed lot of bugs
 	    - new plugin rootconf (separated from usersconf)

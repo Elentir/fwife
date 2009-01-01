@@ -574,12 +574,12 @@ GtkWidget *getExpertModeWidget()
 	GtkWidget *pvbox = gtk_vbox_new(FALSE,5);
 		
 	GtkWidget *label = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(label), _("<b>Select groups you want to install :</b>"));
+	gtk_label_set_markup(GTK_LABEL(label), _("<b>Choose groups you want to install :</b>"));
 	
 	//* Get the lists Widgets *//
 	GtkWidget *categl = getcategorieslist();
 	
-	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 7);
 	gtk_box_pack_start(GTK_BOX(pvbox), categl, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(phbox), pvbox, TRUE, TRUE, 0);
 	
@@ -609,9 +609,9 @@ GtkWidget *getExpertModeWidget()
 	gtk_label_set_line_wrap(GTK_LABEL(packetinfo), TRUE);
 	
 	label = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(label), _("<b>Select packages into selected group :</b>"));
+	gtk_label_set_markup(GTK_LABEL(label), _("<b>Choose packages into selected group :</b>"));
 	
-	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 7);
 	gtk_box_pack_start(GTK_BOX(pvbox), packetl, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hboxbuttons, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hsepa1, FALSE, FALSE, 0);

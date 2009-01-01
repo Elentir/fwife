@@ -450,8 +450,8 @@ GtkWidget *load_gtk_widget()
 	pvbox = gtk_vbox_new(FALSE, 5);
 
 	GtkWidget *labelhelp = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(labelhelp), _("<span face=\"Courier New\"><b>You may select one of the following keyboard maps.</b></span>\n"));
-	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 2);
+	gtk_label_set_markup(GTK_LABEL(labelhelp), _("<span face=\"Courier New\"><b>You may select one of the following keyboard maps.</b></span>"));
+	gtk_box_pack_start(GTK_BOX(pvbox), labelhelp, FALSE, FALSE, 6);
 	gtk_box_pack_start(GTK_BOX(pvbox), pScrollbar, TRUE, TRUE, 0);
 	
 	GtkWidget *hboxbas = gtk_hbox_new(FALSE, 5);

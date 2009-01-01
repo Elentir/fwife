@@ -2,18 +2,9 @@
 
 -> Fwife 0.3
 
-Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible. Use for testing only.
+Warning : Beta version - Caution - Many bugs, segfaults and memory leaks are possible.
 
 This version only support netinstall because it's necessary for fwlive.
-
--> Knows Bugs :
-
-select.c : * graphical bug with packet description label when description too long.
-
--> Ideas :
-
-* Improve gui (dialogbox for exemple)
-* Improve help (add tooltip text, etc...)
 
 -> Compiling and testing : 
 

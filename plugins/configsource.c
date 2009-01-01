@@ -226,8 +226,8 @@ GtkWidget *mirrorview()
 	GtkTreeModel *model;
 	GtkTreeViewColumn *col;
 	GtkCellRenderer *renderer;
-	GtkWidget *view;		
-
+	GtkWidget *view;
+	
 	store = gtk_list_store_new(3, G_TYPE_BOOLEAN, G_TYPE_STRING, G_TYPE_STRING);
 	model = GTK_TREE_MODEL(store);
 	
@@ -237,26 +237,18 @@ GtkWidget *mirrorview()
 	
 	renderer = gtk_cell_renderer_toggle_new ();
   	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled), model);
-  	col = gtk_tree_view_column_new_with_attributes (_("Use"),
-						     renderer,
-						     "active", 0,
-						     NULL);
+  	col = gtk_tree_view_column_new_with_attributes (_("Use"), renderer, "active", 0, NULL);
 	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
   	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, _("Mirrors"));
+	col = gtk_tree_view_column_new_with_attributes (_("Mirrors"), renderer, "text", 1, NULL);
+	gtk_tree_view_column_set_expand (col, TRUE);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
-	
-	col = gtk_tree_view_column_new();
+		
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
-	gtk_tree_view_column_set_title(col, _("Froms"));
+	col = gtk_tree_view_column_new_with_attributes (_("Froms"), renderer, "text", 2, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 
 	return view;
@@ -267,9 +259,14 @@ GtkWidget *load_gtk_widget()
 	GtkWidget *pScrollbar;
 	GtkTreeSelection *selection;
 	GtkWidget *addmirror, *delmirror, *buttonlist;
-	GtkWidget *image;
+	GtkWidget *image, *info;
 
-	GtkWidget *pVBox = gtk_vbox_new(FALSE, 5);
+	GtkWidget *pVBox = gtk_vbox_new(FALSE, 0);
+
+	info = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(info), _("<span face=\"Courier New\"><b>You can choose one or more nearly mirrors to speed up package downloading.</b></span>\n"));
+
+	gtk_box_pack_start (GTK_BOX (pVBox), info, FALSE, FALSE, 5);
 
 	// array of mirrors
 	viewserver = mirrorview();
@@ -278,7 +275,7 @@ GtkWidget *load_gtk_widget()
         pScrollbar = gtk_scrolled_window_new(NULL, NULL);	
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(pScrollbar), viewserver);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pScrollbar), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-	gtk_box_pack_start (GTK_BOX (pVBox), pScrollbar, TRUE, TRUE, 5);
+	gtk_box_pack_start (GTK_BOX (pVBox), pScrollbar, TRUE, TRUE, 0);
 		
 	buttonlist = gtk_hbox_new(TRUE, 10);
 			

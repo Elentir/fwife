@@ -280,46 +280,29 @@ GtkWidget *load_gtk_widget()
 	g_object_unref (model);
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
 
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_USR_IMAGE, NULL);
+	col = gtk_tree_view_column_new_with_attributes ("", renderer, "pixbuf", COLUMN_USR_IMAGE, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+		
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("User"), renderer, "text", COLUMN_USR_NAME, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+		
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("Full Name"), renderer, "text", COLUMN_USR_FULLNAME, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_NAME, NULL);
-	gtk_tree_view_column_set_title(col, _("User"));
+	col = gtk_tree_view_column_new_with_attributes (_("Shell"), renderer, "text", COLUMN_USR_SHELL, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_FULLNAME, NULL);
-	gtk_tree_view_column_set_title(col, _("Full Name"));
+	col = gtk_tree_view_column_new_with_attributes (_("Home"), renderer, "text", COLUMN_USR_HOME, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
-
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_SHELL, NULL);
-	gtk_tree_view_column_set_title(col, _("Shell"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
-
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", COLUMN_USR_HOME, NULL);
-	gtk_tree_view_column_set_title(col, _("Home"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
-
-	col = gtk_tree_view_column_new();
+	
 	renderer = gtk_cell_renderer_pixbuf_new();
-	gtk_tree_view_column_pack_start(col, renderer, FALSE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", COLUMN_USR_PASS, NULL);
-	gtk_tree_view_column_set_title(col, _("Password"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
+	col = gtk_tree_view_column_new_with_attributes (_("Password"), renderer, "pixbuf", COLUMN_USR_PASS, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);	
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (view));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);

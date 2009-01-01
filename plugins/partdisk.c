@@ -952,46 +952,32 @@ GtkWidget *load_gtk_widget()
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(partview), TRUE);
 	
 	// a small icon for swap and root partition
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_pixbuf_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "pixbuf", TYPE_COLUMN, NULL);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
-	
-	// partition name
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", NAME_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Partition"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
-		
-	// partition size
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", SIZE_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Size"));
+	col = gtk_tree_view_column_new_with_attributes ("", renderer, "pixbuf", TYPE_COLUMN, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 	
-	// current filesystem
-	col = gtk_tree_view_column_new();
+	// partition name
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", FS_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Filesystem"));
+	col = gtk_tree_view_column_new_with_attributes (_("Partition"), renderer, "text", NAME_COLUMN, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
+			
+	// partition size
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("Size"), renderer, "text", SIZE_COLUMN, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 	
-	// mountpoint
-	col = gtk_tree_view_column_new();
+	// current filesystem
 	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("Filesystem"), renderer, "text", FS_COLUMN, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
+		
+	// mountpoint
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("Mountpoint"), renderer, "text", MOUNT_COLUMN, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);
 	g_object_set(renderer, "editable", TRUE, NULL);
 	g_signal_connect(renderer, "edited", G_CALLBACK (cell_edited), model);
 	g_object_set_data(G_OBJECT (renderer), "column", GINT_TO_POINTER (MOUNT_COLUMN));
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", MOUNT_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Mountpoint"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(partview), col);	
 
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partview));
 	gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);

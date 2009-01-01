@@ -549,16 +549,18 @@ void x_config(GtkWidget *button, gpointer data)
 				ret = fwx_dotest();
 				//* create /sysconfig/desktop file *//
 				write_dms(sDms);
-				//* change keyboard localisation *//
-				ptr = g_strdup_printf("%s/xkeybchange %s %s %s", SCRIPTDIR, xlayout, xvariant, TARGETDIR);
-				fw_system(ptr);
-				FREE(ptr);
 				
 				exit(ret);
 			}
 			else
 			{
 				wait(&ret);
+
+				//* change keyboard localisation *//
+				ptr = g_strdup_printf("%s/xkeybchange %s %s %s", SCRIPTDIR, xlayout, xvariant, TARGETDIR);
+				fw_system(ptr);
+				FREE(ptr);
+
 				gtk_widget_destroy(pBoite);
 				if(ret)
 					x_config(button, data);

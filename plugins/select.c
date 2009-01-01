@@ -35,7 +35,8 @@ static GtkWidget *categories = NULL;
 static GtkWidget *packetlist = NULL;
 static GtkWidget *packetinfo = NULL;
 static GtkWidget *pRadioKDE = NULL;
-static GtkWidget *vboxmode = NULL;
+static GtkWidget *basicmode = NULL;
+static GtkWidget *expertmode = NULL;
 
 //* Selected Mode : Expert 1 or Basic 0
 static int selectmode = 0;
@@ -436,28 +437,20 @@ GtkWidget *getpacketlist()
 	
 	packetlist = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(packetlist), TRUE);
-	
+		
 	renderer = gtk_cell_renderer_toggle_new ();
 	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled_pack), model);
-	col = gtk_tree_view_column_new_with_attributes (_("Use?"), renderer, "active", 0, NULL);
-	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
-	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
+	col = gtk_tree_view_column_new_with_attributes (_("Install?"), renderer, "active", 0, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, _("Packet name"));
+	col = gtk_tree_view_column_new_with_attributes (_("Package Name"), renderer, "text", 1, NULL);
+	gtk_tree_view_column_set_expand (col, TRUE);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
-	gtk_tree_view_column_set_title(col, _("Size"));
-	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);		
+	col = gtk_tree_view_column_new_with_attributes (_("Size"), renderer, "text", 2, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(packetlist), col);
 
 	gtk_tree_selection_set_mode (gtk_tree_view_get_selection (GTK_TREE_VIEW (packetlist)), GTK_SELECTION_SINGLE);
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (packetlist));
@@ -527,8 +520,6 @@ void allselect_clicked(GtkWidget *button, gpointer boolselect)
 	}
 }
 
-
-
 //* get a gtk tree list for categories *//
 GtkWidget *getcategorieslist()
 {
@@ -544,27 +535,19 @@ GtkWidget *getcategorieslist()
 	
 	categories = gtk_tree_view_new_with_model(model);
 	g_object_unref (model);
-	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(categories), TRUE);
-	
+		
 	renderer = gtk_cell_renderer_toggle_new ();
 	g_signal_connect (renderer, "toggled", G_CALLBACK (fixed_toggled_cat), model);
-	col = gtk_tree_view_column_new_with_attributes (_("Use?"), renderer, "active", USE_COLUMN, NULL);
-	gtk_tree_view_column_set_sizing (GTK_TREE_VIEW_COLUMN (col), GTK_TREE_VIEW_COLUMN_FIXED);
-	gtk_tree_view_column_set_fixed_width (GTK_TREE_VIEW_COLUMN (col), 50);
+	col = gtk_tree_view_column_new_with_attributes (_("Install?"), renderer, "active", USE_COLUMN, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", CAT_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Categorie"));
+	col = gtk_tree_view_column_new_with_attributes (_("Groups"), renderer, "text", CAT_COLUMN, NULL);
+	gtk_tree_view_column_set_expand (col, TRUE);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);
 	
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", SIZE_COLUMN, NULL);
-	gtk_tree_view_column_set_title(col, _("Size"));
+	col = gtk_tree_view_column_new_with_attributes (_("Size"), renderer, "text", SIZE_COLUMN, NULL);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(categories), col);	
 
 	gtk_tree_selection_set_mode (gtk_tree_view_get_selection (GTK_TREE_VIEW (categories)), GTK_SELECTION_SINGLE);
@@ -585,22 +568,36 @@ GtkWidget *getExpertModeWidget()
 	GtkWidget *hsepa1, *hsepa2;
 	GtkWidget *image;
 		
-	GtkWidget *pvboxp = gtk_vbox_new(FALSE,5);
+	GtkWidget *phbox = gtk_hbox_new(FALSE,8);
 	
-	GtkWidget *phbox = gtk_hbox_new(TRUE,8);
+	//* ------------------- Group list ------------------------------ *//
 	GtkWidget *pvbox = gtk_vbox_new(FALSE,5);
-	GtkWidget *phbox2 = gtk_hbox_new(FALSE,8);
-	GtkWidget *categl = getcategorieslist();
-	GtkWidget *packetl = getpacketlist();
+		
+	GtkWidget *label = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(label), _("<b>Select groups you want to install :</b>"));
 	
+	//* Get the lists Widgets *//
+	GtkWidget *categl = getcategorieslist();
+	
+	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 10);
+	gtk_box_pack_start(GTK_BOX(pvbox), categl, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(phbox), pvbox, TRUE, TRUE, 0);
+	
+	//* ------------------- Packet list ------------------------------ *//
+	GtkWidget *packetl = getpacketlist();
+	GtkWidget *phbox2 = gtk_hbox_new(FALSE,8);
+	pvbox = gtk_vbox_new(FALSE,5);
+	
+	//* Two button selecting packages *//
 	GtkWidget *hboxbuttons = gtk_hbox_new(TRUE,5);
-	GtkWidget *buttonselect = gtk_button_new_with_label(_("Select all packages"));
-	GtkWidget *buttonunselect = gtk_button_new_with_label(_("Unselect all packages"));
+	GtkWidget *buttonselect = gtk_button_new_with_label(_("Select all this group's packages"));
+	GtkWidget *buttonunselect = gtk_button_new_with_label(_("Unselect all this group's packages"));
 	g_signal_connect (buttonselect, "clicked", G_CALLBACK (allselect_clicked), GINT_TO_POINTER(1));
 	g_signal_connect (buttonunselect, "clicked", G_CALLBACK (allselect_clicked), GINT_TO_POINTER(0));
 	gtk_box_pack_start(GTK_BOX(hboxbuttons), buttonselect, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(hboxbuttons), buttonunselect, FALSE, TRUE, 0);
 	
+	//* Two separators for packet description *//
 	hsepa1 = gtk_hseparator_new();
 	hsepa2 = gtk_hseparator_new();
 	
@@ -611,8 +608,10 @@ GtkWidget *getExpertModeWidget()
 	image = gtk_image_new_from_file(g_strdup_printf("%s/packet.png", IMAGEDIR));
 	gtk_label_set_line_wrap(GTK_LABEL(packetinfo), TRUE);
 	
-	gtk_box_pack_start(GTK_BOX(phbox), categl, FALSE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(phbox), pvbox, TRUE, TRUE, 0);
+	label = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(label), _("<b>Select packages into selected group :</b>"));
+	
+	gtk_box_pack_start(GTK_BOX(pvbox), label, FALSE, TRUE, 10);
 	gtk_box_pack_start(GTK_BOX(pvbox), packetl, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hboxbuttons, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hsepa1, FALSE, FALSE, 0);
@@ -621,9 +620,10 @@ GtkWidget *getExpertModeWidget()
 	gtk_box_pack_start(GTK_BOX(pvbox), phbox2, FALSE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(pvbox), hsepa2, FALSE, FALSE, 0);
 	
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	//* Put the two box into one big *//
+	gtk_box_pack_start(GTK_BOX(phbox), pvbox, FALSE, TRUE, 0);	
 
-	return pvboxp;
+	return phbox;
 }
 
 // --------------------------------------------- Basic Mode functions ----------------------------------------------- //
@@ -778,6 +778,13 @@ void basicmode_change(GtkWidget *button, gpointer data)
 		else
 			selectcat("network", 0);
 	}
+	else if(!strcmp((char*)data, "NETEX"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+			selectcat("network-extra", 1);
+		else
+			selectcat("network-extra", 0);
+	}
 	else if(!strcmp((char*)data, "MUL"))
 	{
 		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
@@ -791,6 +798,19 @@ void basicmode_change(GtkWidget *button, gpointer data)
 			selectcat("xmultimedia", 0);
 		}
 	}
+	else if(!strcmp((char*)data, "MULEX"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("multimedia-extra", 1);
+			selectcat("xmultimedia-extra", 1);
+		}
+		else
+		{
+			selectcat("multimedia-extra", 0);
+			selectcat("xmultimedia-extra", 0);
+		}
+	}
 	else if(!strcmp((char*)data, "DEV"))
 	{
 		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
@@ -800,6 +820,39 @@ void basicmode_change(GtkWidget *button, gpointer data)
 		else
 		{
 			selectcat("devel", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "DEVEX"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("devel-extra", 1);
+		}
+		else
+		{
+			selectcat("devel-extra", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "CONS"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("apps", 1);
+		}
+		else
+		{
+			selectcat("apps", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "CONSEX"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("apps-extra", 1);
+		}
+		else
+		{
+			selectcat("apps-extra", 0);
 		}
 	}
 	else if(!strcmp((char*)data, "XAPP"))
@@ -815,6 +868,28 @@ void basicmode_change(GtkWidget *button, gpointer data)
 			selectallfiles("xapps", "openoffice.org", 0);
 			selectfile("locale-extra", g_strdup_printf("firefox-%s", lang), 0);
 			selectfile("locale-extra", g_strdup_printf("thunderbird-%s", lang), 0);
+		}
+	}
+	else if(!strcmp((char*)data, "XAPPEX"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("xapps-extra", 1);
+		}
+		else
+		{
+			selectcat("xapps-extra", 0);
+		}
+	}
+	else if(!strcmp((char*)data, "GAME"))
+	{
+		if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)) == TRUE)
+		{
+			selectcat("games-extra", 1);
+		}
+		else
+		{
+			selectcat("games-extra", 0);
 		}
 	}
 	else if(!strcmp((char*)data, "BUR"))
@@ -841,93 +916,153 @@ void basicmode_change(GtkWidget *button, gpointer data)
 
 GtkWidget *getBasicModeWidget()
 {
-	GtkWidget *pvboxp = gtk_vbox_new(FALSE,5);
-	GtkWidget *pvbox, *hboxdesktop, *hboxtemp;
+	GtkWidget *pvboxp = gtk_vbox_new(FALSE,0);
+	GtkWidget *pvbox, *hboxdesktop, *hboxpackage, *hboxtemp;
 	GtkWidget *logo;
 
 	GtkWidget *labelenv = gtk_label_new(NULL);
-	gtk_label_set_markup(GTK_LABEL(labelenv), _("<b>Choose your desktop environnement :</b>"));
-	gtk_box_pack_start(GTK_BOX(pvboxp), labelenv, TRUE, TRUE, 0);
+	gtk_label_set_markup(GTK_LABEL(labelenv), _("<b>Choose your desktop environment :</b>"));
+	gtk_box_pack_start(GTK_BOX(pvboxp), labelenv, FALSE, TRUE, 15);
 	hboxdesktop = gtk_hbox_new(FALSE, 5);
 	
 	//* Desktop radio button *//
-	pvbox = gtk_vbox_new(FALSE,5);
+	pvbox = gtk_vbox_new(FALSE,2);
 	pRadioKDE = gtk_radio_button_new_with_label(NULL, _("KDE"));
 	logo =  gtk_image_new_from_file(g_strdup_printf("%s/kdelogo.png", IMAGEDIR));
 	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
 	hboxtemp = gtk_hbox_new(FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioKDE, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, FALSE, FALSE, 8);
 	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
 
-	pvbox = gtk_vbox_new(FALSE,5);
+	pvbox = gtk_vbox_new(FALSE,2);
 	GtkWidget *pRadioGNOME =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("GNOME"));
 	logo =  gtk_image_new_from_file(g_strdup_printf("%s/gnomelogo.png", IMAGEDIR));
 	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
 	hboxtemp = gtk_hbox_new(FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioGNOME, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, FALSE, FALSE, 8);
 	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
 
-	pvbox = gtk_vbox_new(FALSE,5);
+	pvbox = gtk_vbox_new(FALSE,2);
 	GtkWidget *pRadioXFCE =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("XFCE"));
 	logo =  gtk_image_new_from_file(g_strdup_printf("%s/xfcelogo.png", IMAGEDIR));
 	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
 	hboxtemp = gtk_hbox_new(FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioXFCE, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, FALSE, FALSE, 8);
 	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
 
-	pvbox = gtk_vbox_new(FALSE,5);
+	pvbox = gtk_vbox_new(FALSE,2);
 	GtkWidget *pRadioLXDE =  gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON (pRadioKDE), _("LXDE"));
 	logo =  gtk_image_new_from_file(g_strdup_printf("%s/lxdelogo.png", IMAGEDIR));
 	gtk_box_pack_start(GTK_BOX(pvbox), logo, FALSE, FALSE, 0);
 	hboxtemp = gtk_hbox_new(FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(hboxtemp), pRadioLXDE, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), hboxtemp, FALSE, FALSE, 8);
 	gtk_box_pack_start(GTK_BOX(hboxdesktop), pvbox, TRUE, TRUE, 0);
 	
-	gtk_box_pack_start(GTK_BOX(pvboxp), hboxdesktop, TRUE, TRUE, 0);
-
+	gtk_box_pack_start(GTK_BOX(pvboxp), hboxdesktop, FALSE, TRUE, 15);
+	
 	//* Other check button for other packages *//
+	
+	hboxpackage = gtk_hbox_new(FALSE, 0);
+	
+	//* Basic packages *//
+	pvbox = gtk_vbox_new(FALSE, 5);
 	GtkWidget *labelgroup = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(labelgroup), _("<b>Choose groups you want to install :</b>"));
-	gtk_box_pack_start(GTK_BOX(pvboxp), labelgroup, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), labelgroup, TRUE, TRUE, 0);
 	
 	GtkWidget *phbox = gtk_hbox_new(FALSE,5);
-	GtkWidget *pToggleApp =  gtk_check_button_new_with_label(_("Common application (Firefox, Thunderbird,...)"));
+	GtkWidget *pToggleApp =  gtk_check_button_new_with_label(_("Graphical Application (Firefox, Thunderbird,...)"));
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleApp) , TRUE);
 	gtk_signal_connect(GTK_OBJECT(pToggleApp), "toggled", G_CALLBACK(basicmode_change), (gpointer)"XAPP");
 	gtk_box_pack_start(GTK_BOX(phbox), pToggleApp, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+	
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleCons =  gtk_check_button_new_with_label(_("Console Applications (Nano, Vim...)"));
+	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleCons) , TRUE);
+	gtk_signal_connect(GTK_OBJECT(pToggleCons), "toggled", G_CALLBACK(basicmode_change), (gpointer)"CONS");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleCons, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
 
 	phbox = gtk_hbox_new(FALSE,5);
 	GtkWidget *pToggleBur =  gtk_check_button_new_with_label(_("OpenOffice Suite"));
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleBur) , TRUE);
 	gtk_signal_connect(GTK_OBJECT(pToggleBur), "toggled", G_CALLBACK(basicmode_change), (gpointer)"BUR");
 	gtk_box_pack_start(GTK_BOX(phbox), pToggleBur, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
 
 	phbox = gtk_hbox_new(FALSE,5);
 	GtkWidget *pToggleNet =  gtk_check_button_new_with_label(_("Network"));
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleNet) , TRUE);
 	gtk_signal_connect(GTK_OBJECT(pToggleNet), "toggled", G_CALLBACK(basicmode_change), (gpointer)"NET");
 	gtk_box_pack_start(GTK_BOX(phbox), pToggleNet, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
 
 	phbox = gtk_hbox_new(FALSE,5);
 	GtkWidget *pToggleDev =  gtk_check_button_new_with_label(_("Development"));
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleDev) , TRUE);
 	gtk_signal_connect(GTK_OBJECT(pToggleDev), "toggled", G_CALLBACK(basicmode_change), (gpointer)"DEV");
 	gtk_box_pack_start(GTK_BOX(phbox), pToggleDev, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
 
 	phbox = gtk_hbox_new(FALSE,5);
 	GtkWidget *pToggleMul =  gtk_check_button_new_with_label(_("Multimedia"));
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(pToggleMul) , TRUE);
 	gtk_signal_connect(GTK_OBJECT(pToggleMul), "toggled", G_CALLBACK(basicmode_change), (gpointer)"MUL");
 	gtk_box_pack_start(GTK_BOX(phbox), pToggleMul, TRUE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(pvboxp), phbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+	
+	gtk_box_pack_start(GTK_BOX(hboxpackage), pvbox, TRUE, TRUE, 0);
+	
+	//* Extra packages *//
+	pvbox = gtk_vbox_new(FALSE, 5);
+	GtkWidget *labelgroupex = gtk_label_new(NULL);
+	gtk_label_set_markup(GTK_LABEL(labelgroupex), _("<b>You can choose extra groups :</b>"));
+	gtk_box_pack_start(GTK_BOX(pvbox), labelgroupex, TRUE, TRUE, 0);
+	
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleAppex =  gtk_check_button_new_with_label(_("Extra - Graphical Applications"));
+	gtk_signal_connect(GTK_OBJECT(pToggleAppex), "toggled", G_CALLBACK(basicmode_change), (gpointer)"APPEX");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleAppex, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+	
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleConsex =  gtk_check_button_new_with_label(_("Extra - Console Applications"));
+	gtk_signal_connect(GTK_OBJECT(pToggleConsex), "toggled", G_CALLBACK(basicmode_change), (gpointer)"CONSEX");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleConsex, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleGame =  gtk_check_button_new_with_label(_("Extra - Games"));
+	gtk_signal_connect(GTK_OBJECT(pToggleGame), "toggled", G_CALLBACK(basicmode_change), (gpointer)"GAME");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleGame, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleNetex =  gtk_check_button_new_with_label(_("Extra - Network"));
+	gtk_signal_connect(GTK_OBJECT(pToggleNetex), "toggled", G_CALLBACK(basicmode_change), (gpointer)"NETEX");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleNetex, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleDevex =  gtk_check_button_new_with_label(_("Extra - Development"));
+	gtk_signal_connect(GTK_OBJECT(pToggleDevex), "toggled", G_CALLBACK(basicmode_change), (gpointer)"DEVEX");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleDevex, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+
+	phbox = gtk_hbox_new(FALSE,5);
+	GtkWidget *pToggleMulex =  gtk_check_button_new_with_label(_("Extra - Multimedia"));
+	gtk_signal_connect(GTK_OBJECT(pToggleMulex), "toggled", G_CALLBACK(basicmode_change), (gpointer)"MULEX");
+	gtk_box_pack_start(GTK_BOX(phbox), pToggleMulex, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(pvbox), phbox, TRUE, TRUE, 0);
+	
+	//* Put into hbox *//	
+	gtk_box_pack_start(GTK_BOX(hboxpackage), pvbox, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(pvboxp), hboxpackage, TRUE, TRUE, 0);
 	
 	return pvboxp;
 }
@@ -938,7 +1073,11 @@ GtkWidget *getBasicModeWidget()
 //* Load main widget *//
 GtkWidget *load_gtk_widget()
 {
-	vboxmode = gtk_vbox_new(FALSE,5);
+	GtkWidget *vboxmode = gtk_vbox_new(FALSE,5);
+	basicmode = getBasicModeWidget();
+	expertmode = getExpertModeWidget();
+	gtk_box_pack_start(GTK_BOX(vboxmode), expertmode, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vboxmode), basicmode, TRUE, TRUE, 0);
 
 	return vboxmode;
 }
@@ -953,6 +1092,13 @@ int prerun(GList **config)
 	GtkWidget* pBoite;
 	GtkWidget *progress, *vbox;
 	extern GtkWidget *assistant;
+	
+	gtk_widget_hide(basicmode);
+	gtk_widget_hide(expertmode);
+	
+	//* if previous loaded (previous button used) do nothing *//
+	if(syncs == NULL && allpackets == NULL && cats == NULL)
+	{
 	
 	pBoite = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_transient_for(GTK_WINDOW(pBoite), GTK_WINDOW(assistant));
@@ -976,7 +1122,7 @@ int prerun(GList **config)
 	
 	// if an instance of pacman running, set it down
 	pacman_release();
-
+	
 	// Initialize pacman
 	if(pacman_initialize(TARGETDIR) == -1)
 	{
@@ -1034,16 +1180,15 @@ int prerun(GList **config)
 	}
 	
 	gtk_widget_destroy(pBoite);
+	
+	}
 
-	//* Load plugin dynamicly to save memory *//
-	GtkWidget *mode;
 	switch(fwife_question(_("Do you want to use expert mode?\n\nThe normal mode shows a choice like 'C compiler system', the expert mode show you 'C libs', 'C compiler', 'C include files', etc - each individual package. Obviously, you should know what you're doing if you use the expert mode since it's possible to skip packages that are crucial to the functioning of your system. Choose 'no' for using normal mode that select groups of packages, or choose 'yes' for using expert mode with a switch for each package.")))
 	{
 		case GTK_RESPONSE_YES:			
-			mode = getExpertModeWidget();
-			gtk_box_pack_start(GTK_BOX(vboxmode), mode, TRUE, TRUE, 0);
-			gtk_widget_show_all(vboxmode);
+			gtk_widget_show(expertmode);
 			selectmode = 1;
+			gtk_list_store_clear(GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(categories))));
 			
 			// add cats in treeview list
 			for(j=0; j < g_list_length(cats); j+=3) 
@@ -1057,9 +1202,7 @@ int prerun(GList **config)
 			break;
 		case GTK_RESPONSE_NO:
 			selectmode = 0;
-			mode = getBasicModeWidget();
-			gtk_box_pack_start(GTK_BOX(vboxmode), mode, TRUE, TRUE, 0);
-			gtk_widget_show_all(vboxmode);
+			gtk_widget_show(basicmode);
 			break;
 	}
 	

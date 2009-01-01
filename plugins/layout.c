@@ -55,7 +55,7 @@ plugin_t plugin =
 	GTK_ASSISTANT_PAGE_CONTENT,
 	FALSE,
 	NULL,
-	prerun,
+	NULL,
 	run,
 	NULL // dlopen handle
 };
@@ -94,6 +94,7 @@ int find(char *dirname)
 		perror(dirname);
 		return(1);
 	}
+
 	while ((ent = readdir(dir)) != NULL)
 	{
 		fn = g_strdup_printf("%s/%s", dirname, ent->d_name);
@@ -420,34 +421,23 @@ GtkWidget *load_gtk_widget()
 	g_object_unref (model);
 	gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(viewlayout), TRUE);
 		
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 0, NULL);
-	gtk_tree_view_column_set_title(col, "Name");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);
+	col = gtk_tree_view_column_new_with_attributes (_("Name"), renderer, "text", 0, NULL);
+	gtk_tree_view_column_set_expand (col, TRUE);
+	gtk_tree_view_append_column(GTK_TREE_VIEW (viewlayout), col);
+	
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("X Layout"), renderer, "text", 1, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW (viewlayout), col);	
+	
+	renderer = gtk_cell_renderer_text_new();
+	col = gtk_tree_view_column_new_with_attributes (_("X Variant"), renderer, "text", 2, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW (viewlayout), col);
 		
-	col = gtk_tree_view_column_new();
 	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 1, NULL);
-	gtk_tree_view_column_set_title(col, "X Layout");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);
-	
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 2, NULL);
-	gtk_tree_view_column_set_title(col, "Variant");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);
-	
-	col = gtk_tree_view_column_new();
-	renderer = gtk_cell_renderer_text_new();
-	gtk_tree_view_column_pack_start(col, renderer, TRUE);
-	gtk_tree_view_column_set_attributes(col, renderer, "text", 3, NULL);
-	gtk_tree_view_column_set_title(col, "Console keymap");
-	gtk_tree_view_append_column(GTK_TREE_VIEW(viewlayout), col);
-	
+	col = gtk_tree_view_column_new_with_attributes (_("Console keymap"), renderer, "text", 3, NULL);
+	gtk_tree_view_append_column(GTK_TREE_VIEW (viewlayout), col);
+		
 	selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (viewlayout));
         gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);	
       
@@ -477,24 +467,19 @@ GtkWidget *load_gtk_widget()
 	gtk_box_pack_start(GTK_BOX(hboxbas), persokeyb, FALSE, TRUE, 5);
 	gtk_box_pack_start(GTK_BOX(pvbox), hboxbas, FALSE, FALSE, 5);
 
-	return pvbox;
-}
-
-int prerun(GList **config)
-{
 	//* Load keymaps use for personalized keyboard *//
 	find_console_layout(CKEYDIR);
 	find_x_layout(XKEYDIR);
 
 	//* Loads keymaps from files *//
-	find(KEYDIR);	
+	find(KEYDIR);
 
-	return 0;
+	return pvbox;
 }
 
 int run(GList **config)
 {
-	char *fn, *ptr;
+	char *fn;
 	FILE* fp;
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;

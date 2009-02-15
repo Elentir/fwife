@@ -1,0 +1,17 @@
+src/plugins/asklang.c
+src/plugins/configsource.c
+src/plugins/finish.c
+src/plugins/partdisk.c
+src/plugins/greet.c
+src/plugins/layout.c
+src/plugins/partdisk.c
+src/plugins/select.c
+src/plugins/install.c
+src/plugins/postconf.c
+src/plugins/rootconf.c
+src/plugins/usersconf.c
+src/plugins/grubconf.c
+src/plugins/timeconf.c
+src/plugins/netconf.c
+src/fwife.c
+src/util.c

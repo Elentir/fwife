@@ -46,8 +46,8 @@ char *langs[] =
 	"fr_FR", "French / Français",
 	"de_DE", "German / Deutsch",
 	"hu_HU", "Hungarian / Magyar",
-        "id_ID", "Indonesian / Bahasa Indonesia",
-        "it_IT", "Italian / Italiano",
+    "id_ID", "Indonesian / Bahasa Indonesia",
+    "it_IT", "Italian / Italiano",
 	"ro_RO", "Romanian / Românã",
 	"sk_SK", "Slovak / Slovenèina",
 	"sv_SE", "Swedish / Svenska"
@@ -185,6 +185,7 @@ int run(GList **config)
 	setenv("LANG",   selected, 1);
 	setlocale(LC_ALL, selected);
 	bindtextdomain("fwife", "/usr/share/locale");
+	textdomain("fwife");
 	
 	if(!strcmp("en_US", selected))
 		setenv("CHARSET", "iso-8859-1", 1);
